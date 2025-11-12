@@ -1,18 +1,15 @@
-@'
 services:
   - type: web
-    name: zomrah
+    name: zomra_project
     env: python
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --threads 4 --timeout 120
     plan: free
-    region: frankfurt
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn app:app --workers 2 --threads 4 --timeout 120"
-    autoDeploy: true
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.9
       - key: OPENAI_MODEL
         value: gpt-4o-mini
       - key: FORCE_AI_FALLBACK
         value: "false"
-'@ | Out-File -Encoding utf8 render.yaml
+      - key: URGENT_NEEDS_JSON
+        value: urgent_needs.json

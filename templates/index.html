@@ -82,6 +82,14 @@
     .map-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px;border-top:1px solid #eee;background:#fff}
     .map-filters input,.map-filters select{padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-family:inherit}
     .map-filters .counter{font-size:.9em;color:#555;margin-inline-start:auto}
+
+    /* كروت الاحتياج */
+    .urgent-needs-wrapper{margin-top:10px}
+    .urgent-card{padding:12px;margin:10px 0;border-radius:12px;box-shadow:0 4px 8px rgba(0,0,0,.05);border-right:5px solid}
+    .urgent-card.critical{border-color:var(--critical-red);background:#FFF0F0}
+    .urgent-card.high{border-color:var(--high-yellow);background:#FFF9E0}
+    .urgent-card.low{border-color:var(--low-blue);background:#E0F7FA}
+    .urgent-card .status{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:8px;background:#fff;font-weight:800}
   </style>
 </head>
 <body>
@@ -507,8 +515,7 @@ END:VCALENDAR`;
         });
         const j = await r.json();
         if (j.ok){ displayMessage('📩 تم إرسال تذكير SMS بنجاح.','bot'); return true; }
-        displayError('تعذّر إرسال SMS: ' + (j.error||''));
-        return false;
+        displayError('تعذّر إرسال SMS: ' + (j.error||'')); return false;
       }catch(e){
         displayError('خطأ أثناء إرسال SMS (قد لا يكون المسار متاحًا في الخادم).');
         return false;
@@ -518,12 +525,12 @@ END:VCALENDAR`;
     function showNoSMSAlternatives(next_date, mountEl){
       const msg = encodeURIComponent(`تذكير زمرة: موعد تبرعك المقترح بتاريخ ${next_date}.`);
       const wa = `https://wa.me/?text=${msg}`;
-
-      displayMessage('ℹ️ لم يتم تفعيل SMS. استخدم أحد البدائل التالية:','bot');
+      const wrap = mountEl || document.getElementById('chat-box').lastElementChild;
 
       const waBtn = document.createElement('a');
       waBtn.href = wa; waBtn.target = '_blank'; waBtn.rel = 'noopener';
       waBtn.className = 'go-map-btn';
+      waBtn.style.marginInlineEnd='8px';
       waBtn.textContent = 'أرسل التذكير عبر واتساب';
 
       const icsBtn = document.createElement('button');
@@ -531,8 +538,8 @@ END:VCALENDAR`;
       icsBtn.textContent = 'حمّل موعد (.ics)';
       icsBtn.onclick = ()=>downloadICS(next_date);
 
-      (mountEl || document.getElementById('chat-box').lastElementChild).appendChild(waBtn);
-      (mountEl || document.getElementById('chat-box').lastElementChild).appendChild(icsBtn);
+      wrap.appendChild(waBtn);
+      wrap.appendChild(icsBtn);
     }
 
     /* ===== 8) الشات ===== */
@@ -571,7 +578,7 @@ END:VCALENDAR`;
       }
     });
 
-    /* ===== 9) أزرار الشريط الجانبي ===== */
+    /* ===== 9) الاحتياج العاجل ===== */
     document.getElementById('urgent-needs-btn').addEventListener('click', async function(){
       displayMessage('الاحتياج العاجل للدم','user');
       try{
@@ -593,29 +600,118 @@ END:VCALENDAR`;
       }catch(e){ displayError('❌ فشل جلب الاحتياج العاجل.'); }
     });
 
-    document.getElementById('eligibility-flow-btn').addEventListener('click', function(){
-      displayMessage('(نموذج فحص الأهلية يظهر هنا كما في نسختك السابقة)','bot');
-    });
+    /* ===== 10) فحص الأهلية (مُفعّل) ===== */
+    function ynField(id,label){
+      return `
+        <div style="margin-top:10px">
+          <label style="font-weight:700">${label}</label>
+          <div class="yn-group" data-id="${id}">
+            <button type="button" class="helper-btn yn-btn" data-val="true">نعم</button>
+            <button type="button" class="helper-btn yn-btn" data-val="false">لا</button>
+          </div>
+        </div>`;
+    }
+    function getYN(root,id){
+      const grp=root.querySelector('.yn-group[data-id="'+id+'"]'); if(!grp) return false;
+      const act=grp.querySelector('.yn-btn.active'); return act ? (act.getAttribute('data-val')==='true') : false;
+    }
+    function renderEligibilityForm(){
+      const cb=document.getElementById('chat-box');
+      const card=document.createElement('div'); card.className='message bot-message';
+      let html='';
+      html+='<div><strong>فحص الأهلية للتبرع</strong></div>';
+      html+='<div class="inline-note">أجب عن الأسئلة التالية، ثم اضغط «إرسال التقييم».</div>';
+      html+='<div style="margin-top:10px"><label>كم عمرك؟</label><input id="elig-age" type="number" min="1" max="100" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>';
+      html+='<div style="margin-top:10px"><label>كم وزنك بالكيلو؟</label><input id="elig-weight" type="number" min="30" max="300" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>';
+      html+='<div style="margin-top:10px"><label>متى كان آخر تبرع لك؟ (بالأيام)</label><input id="elig-last" type="number" min="0" max="2000" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>';
+      html+=ynField('on_anticoagulants','هل تتناول أدوية سيولة الدم حالياً؟');
+      html+=ynField('on_antibiotics','هل تتناول مضادًا حيويًا لعدوى نشطة؟');
+      html+=ynField('has_cold','هل لديك أعراض زكام/حمى حالياً؟');
+      html+=ynField('pregnant','هل أنتِ حامل حاليًا؟ (للنساء)');
+      html+='<div style="margin-top:10px"><label>هل أجريت عملية/قلع أسنان مؤخرًا؟ كم يوم مضى؟</label><input id="elig-proc" type="number" min="0" max="400" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>';
+      html+='<div style="margin-top:10px"><label>هل عملت وشم/ثقب خلال آخر كم شهر؟</label><input id="elig-tattoo" type="number" min="0" max="48" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>';
+      html+='<div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button id="elig-submit" class="helper-btn">إرسال التقييم</button></div>';
+      card.innerHTML=html; cb.appendChild(card); cb.scrollTop=cb.scrollHeight;
 
+      card.querySelectorAll('.yn-btn').forEach(btn=>{
+        btn.addEventListener('click', function(){
+          const group=this.parentElement; group.querySelectorAll('.yn-btn').forEach(b=>b.classList.remove('active'));
+          this.classList.add('active');
+        });
+      });
+
+      card.querySelector('#elig-submit').addEventListener('click', async ()=>{
+        const payload={
+          age: Number(card.querySelector('#elig-age').value||0),
+          weight: Number(card.querySelector('#elig-weight').value||0),
+          last_donation_days: Number(card.querySelector('#elig-last').value||9999),
+          on_anticoagulants: getYN(card,'on_anticoagulants'),
+          on_antibiotics: getYN(card,'on_antibiotics'),
+          has_cold: getYN(card,'has_cold'),
+          pregnant: getYN(card,'pregnant'),
+          recent_procedure_days: Number(card.querySelector('#elig-proc').value||9999),
+          tattoo_months: Number(card.querySelector('#elig-tattoo').value||999)
+        };
+        try{
+          const r=await fetch('/api/eligibility/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+          const data=await r.json();
+          renderEligibilityResult(data);
+        }catch(e){ displayError('❌ خطأ في فحص الأهلية.'); }
+      });
+    }
+    function renderEligibilityResult(data){
+      const cb=document.getElementById('chat-box');
+      const m=document.createElement('div'); m.className='message bot-message';
+      let html='';
+      if(data.eligible){ html+='<div>✅ مؤهل للتبرع حالياً. أحسنت!</div>'; }
+      else{
+        html+='<div>❌ غير مؤهل حالياً للأسباب التالية:</div>';
+        const rs=data.reasons||[]; if(rs.length){ html+='<ul>'; rs.forEach(r=> html+='<li>'+r+'</li>'); html+='</ul>'; }
+      }
+      if(data.next_eligible_date){
+        html+='<div class="inline-note">📅 موعدك المقترح القادم: <strong>'+data.next_eligible_date+'</strong><br><span>حسب قاعدة 90 يوم للدم الكامل.</span></div>';
+      }
+      html+='<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">'+
+            '<button class="helper-btn" id="ok-btn">حسناً</button>'+
+            '<button class="helper-btn" id="add-rem-btn">أضف تذكير 90 يوم</button>'+
+            '</div>';
+      m.innerHTML=html; cb.appendChild(m); cb.scrollTop=cb.scrollHeight;
+
+      m.querySelector('#ok-btn').addEventListener('click', ()=> displayMessage('حسناً ✅','user'));
+      m.querySelector('#add-rem-btn').addEventListener('click', async ()=>{
+        const who = prompt('اسمك (اختياري):') || 'User';
+        const phone = prompt('رقم جوالك (اختياري لإشعار لاحق):') || '';
+        try{
+          const r=await fetch('/api/reminder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_hint:who, phone})});
+          const j=await r.json();
+          if(j.ok){
+            displayMessage('⏰ تم تسجيل تذكير. موعدك: '+ j.next_date,'bot');
+            if (TWILIO_READY && phone){ const ok=await trySendSMS(phone, j.next_date); if(!ok) showNoSMSAlternatives(j.next_date, m); }
+            else { showNoSMSAlternatives(j.next_date, m); }
+          } else {
+            displayError('⚠️ لم يتم تسجيل التذكير.');
+          }
+        }catch(e){ displayError('❌ خطأ أثناء إضافة التذكير.'); }
+      });
+    }
+    document.getElementById('eligibility-flow-btn').addEventListener('click', renderEligibilityForm);
+
+    /* ===== 11) تذكير سريع — يطلب الجوال دائمًا ===== */
     document.getElementById('reminder-btn').addEventListener('click', async function(){
       const who = prompt('اسمك (اختياري):') || 'User';
+      const phone = prompt('رقم جوالك (اختياري):') || '';
       try{
         const r = await fetch('/api/reminder',{
           method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({user_hint:who})
+          body: JSON.stringify({user_hint:who, phone})
         });
         const j = await r.json();
         if(!j.ok){ displayError('لم يتم تسجيل التذكير.'); return; }
         displayMessage('⏰ تم تسجيل تذكير. موعدك المقترح القادم: '+ j.next_date,'bot');
 
-        if (TWILIO_READY){
-          const phone = prompt('أدخل رقم جوالك بصيغة دولية (مثل +9665xxxxxxx) لإرسال تذكير SMS:');
-          if (phone && phone.trim()){
-            const ok = await trySendSMS(phone, j.next_date);
-            if(!ok) showNoSMSAlternatives(j.next_date);
-          } else {
-            showNoSMSAlternatives(j.next_date);
-          }
+        if (TWILIO_READY && phone){
+          const ok = await trySendSMS(phone, j.next_date);
+          if(!ok) showNoSMSAlternatives(j.next_date);
         } else {
           showNoSMSAlternatives(j.next_date);
         }
@@ -624,7 +720,7 @@ END:VCALENDAR`;
       }
     });
 
-    /* ===== 10) FAQ إرسال سريع ===== */
+    /* ===== 12) FAQ إرسال سريع ===== */
     window.sendQuickQuestion = function(q){
       var f = document.getElementById('user-input');
       f.value = q;

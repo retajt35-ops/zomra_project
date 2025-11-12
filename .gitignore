@@ -1,5 +1,6 @@
-venv/
 __pycache__/
 *.pyc
 .env
 chat_logs.db
+*.sqlite3
+.DS_Store
