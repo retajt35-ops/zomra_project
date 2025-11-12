@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>زمرة | بوصلة الدم</title>
 
@@ -27,465 +27,486 @@
       --critical-red:#DC3545;--high-yellow:#FFC107;--low-blue:#17A2B8;
     }
     body{font-family:'Tajawal',sans-serif;background:var(--background-light);margin:0;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px;box-sizing:border-box;color:var(--primary-text)}
-    .main-wrapper{display:flex;flex-direction:row-reverse;width:100%;max-width:1300px;gap:25px}
-    .chat-container{flex:3;background:var(--card-background);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-subtle);display:flex;flex-direction:column;overflow:hidden;min-height:700px}
+    .main-wrapper{display:flex;flex-direction:row-reverse;width:100%;max-width:1300px;gap:25px;height:100%}
+    .chat-container{flex:3;background:var(--card-background);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-subtle);display:flex;flex-direction:column;overflow:hidden;height:calc(100vh - 40px);min-height:700px}
     .sidebar-container{flex:1.2;display:flex;flex-direction:column;gap:20px}
-    .sidebar-box{background:var(--card-background);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-subtle);padding:16px;display:flex;flex-direction:column;gap:10px}
-    .sidebar-box h2{color:var(--burgundy-dark);font-size:1.2em;font-weight:800;margin:0;padding-bottom:10px;border-bottom:2px solid #EEE}
-    .sidebar-btn{display:flex;flex-direction:row-reverse;align-items:center;gap:12px;padding:14px;border-radius:var(--border-radius-sm);text-decoration:none;color:#fff;transition:all .2s;border:none;cursor:pointer;min-height:54px;box-shadow:0 4px 8px rgba(0,0,0,.15)}
+    .sidebar-box{background:var(--card-background);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-subtle);padding:20px;display:flex;flex-direction:column;gap:15px}
+    .sidebar-box h2{color:var(--burgundy-dark);font-size:1.3em;font-weight:800;margin:0;padding-bottom:10px;border-bottom:2px solid #EEE}
+    .sidebar-btn{display:flex;flex-direction:row-reverse;align-items:center;gap:15px;padding:15px;border-radius:var(--border-radius-sm);text-decoration:none;color:#fff;transition:all .2s;border:none;cursor:pointer;min-height:60px;box-shadow:0 4px 8px rgba(0,0,0,.15)}
     .sidebar-btn.hospital{background-image:var(--gradient-hospital-btn)}
     .sidebar-btn.urgent{background-image:var(--gradient-urgent-btn)}
     .sidebar-btn.map{background-image:var(--gradient-map-btn)}
     .sidebar-btn.whatsapp{background-image:var(--gradient-whatsapp-btn)}
-    .sidebar-btn .icon{font-size:1.4em;color:#fff;font-weight:900}
-    .sidebar-btn .label{font-weight:800;font-size:.98em;flex-grow:1;text-align:right}
-    .sidebar-btn:hover:not(:disabled){transform:translateY(-1px);opacity:.95}
+    .sidebar-btn .icon{font-size:1.4em}
+    .sidebar-btn .label{font-weight:700;font-size:1em;flex-grow:1;text-align:right}
+    .sidebar-btn:hover:not(:disabled){transform:scale(1.02);opacity:.9;box-shadow:0 8px 16px rgba(0,0,0,.25)}
     .sidebar-btn:disabled{cursor:not-allowed;opacity:.6}
 
-    header{background:var(--gradient-header);padding:16px;border-bottom:1px solid #E0E0E0;text-align:right}
-    header h1{font-size:1.4em;margin:0;color:var(--burgundy-dark);font-weight:800;display:flex;align-items:center;flex-direction:row-reverse;justify-content:flex-end;gap:10px}
+    header{background:var(--gradient-header);padding:20px;border-bottom:1px solid #E0E0E0;text-align:right}
+    header h1{font-size:1.6em;margin:0;color:var(--burgundy-dark);font-weight:800;display:flex;align-items:center;flex-direction:row-reverse;justify-content:flex-end;gap:10px}
 
-    #chat-box{flex-grow:1;padding:18px 20px;overflow-y:auto;background:#FAFAFA;display:flex;flex-direction:column}
-    .message{padding:12px 16px;margin-bottom:12px;border-radius:var(--border-radius-lg);max-width:72%;line-height:1.7;font-size:.95em;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+    #chat-box{flex-grow:1;padding:20px 25px;overflow-y:auto;background:#FAFAFA;display:flex;flex-direction:column}
+
+    .message{padding:14px 20px;margin-bottom:15px;border-radius:var(--border-radius-lg);max-width:70%;line-height:1.7;font-size:.98em;box-shadow:0 1px 2px rgba(0,0,0,.05)}
     .bot-message{background:var(--bot-bubble);align-self:flex-start;border-bottom-left-radius:6px}
     .user-message{background:var(--user-bubble);color:#fff;align-self:flex-end;border-bottom-right-radius:6px}
-    .loading-message{font-weight:800;color:var(--secondary-text);background:#F0F0F0}
-    .error-message{color:#b00;font-weight:800}
+    .loading-message{font-weight:700;color:var(--secondary-text);background:#F0F0F0}
+    .error-message{color:#a00;font-weight:700}
 
-    .input-area{display:flex;padding:12px 16px;border-top:1px solid #E0E0E0;background:var(--card-background)}
-    #user-input{flex-grow:1;padding:11px 14px;border:2px solid var(--primary-red);border-radius:12px;margin-inline-end:10px;font-size:1em}
-    #user-input:focus{outline:none;border-color:var(--burgundy-dark)}
-    #send-btn{background:var(--gradient-send);color:#fff;border:none;padding:11px 24px;border-radius:12px;cursor:pointer;font-size:1em;font-weight:800}
+    .input-area{display:flex;padding:15px 20px;border-top:1px solid #E0E0E0;background:var(--card-background);flex-shrink:0}
+    #user-input{flex-grow:1;padding:12px 18px;border:2px solid var(--primary-red);border-radius:12px;margin-inline-end:10px;font-size:1em;outline:none}
+    #send-btn{background:var(--gradient-send);color:#fff;border:none;padding:12px 30px;border-radius:12px;cursor:pointer;font-size:1em;font-weight:700}
+    #send-btn:hover:not(:disabled){opacity:.9}
 
     .translation-block{margin-top:10px}
-    .toggle-btn,.helper-btn{margin-top:8px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:6px 10px;cursor:pointer;font-weight:800}
+    .toggle-btn,.helper-btn{margin-top:8px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:6px 12px;cursor:pointer;font-weight:700}
     .inline-note{font-size:.9em;color:var(--secondary-text);margin-top:6px}
 
-    .faq-list{display:flex;flex-direction:column;gap:8px}
-    .faq-item{background:#fafafa;border:1px solid #eee;border-radius:10px;padding:10px 12px;cursor:pointer;font-weight:800}
-    .faq-item:hover{background:#fff}
+    .faq-list{display:flex;flex-direction:column;gap:10px}
+    .faq-item{background:#fafafa;border:1px solid #eee;border-radius:10px;padding:10px 12px;cursor:pointer;font-weight:700;transition:transform .15s, background .15s, border-color .15s;user-select:none}
+    .faq-item:hover{transform:translateY(-1px);background:#fefefe;border-color:#e2e2e2}
 
     .go-map-btn{display:inline-block;margin-top:8px;padding:8px 12px;border-radius:10px;background:linear-gradient(to left,#800020,#B30000);color:#fff;text-decoration:none;font-weight:800;border:none;box-shadow:0 4px 8px rgba(0,0,0,.15)}
-    .go-map-btn:hover{opacity:.95}
+    .go-map-btn:hover{opacity:.92;transform:translateY(-1px)}
+    .details-label{font-weight:700}
 
     .map-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px;border-top:1px solid #eee;background:#fff}
     .map-filters input,.map-filters select{padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-family:inherit}
     .map-filters .counter{font-size:.9em;color:#555;margin-inline-start:auto}
 
-    .urgent-needs-wrapper .urgent-card{padding:12px;margin-bottom:10px;border-radius:12px;box-shadow:0 4px 8px rgba(0,0,0,.05);border-right:5px solid}
-    .urgent-card.critical{border-color:#DC3545;background:#FFF0F0}
-    .urgent-card.high{border-color:#FFC107;background:#FFF9E0}
-    .urgent-card.low{border-color:#17A2B8;background:#E0F7FA}
-    .urgent-card .status{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:8px;font-weight:800}
+    /* أزرار نعم/لا */
+    .yn-group{display:flex;gap:8px;margin-top:6px}
+    .yn-btn{border:1px solid #ccc;border-radius:10px;padding:8px 14px;background:#fff;cursor:pointer;font-weight:800;display:flex;align-items:center;gap:8px}
+    .yn-btn.active{border-color:#7aa7ff;background:#eaf1ff;box-shadow:0 0 0 2px #eaf1ff inset}
+    .yn-btn .mark{display:inline-block;width:18px;height:18px;border-radius:50%;border:2px solid #7aa7ff;background:#fff}
+    .yn-btn.active .mark{background:#7aa7ff}
   </style>
 </head>
 <body>
-  <div class="main-wrapper">
-    <div class="chat-container">
-      <header>
-        <h1>محادثة مع زمرة <span class="blood-drop">🩸</span></h1>
-      </header>
 
-      <div id="chat-box">
-        <div class="message bot-message">
-          أهلاً بك في <strong style="color:var(--primary-red);font-weight:800;">زمرة</strong> — اكتب سؤالك أو استخدم الأزرار الجانبية.
-          <div class="translation-block">
-            <button class="toggle-btn" onclick="toggleNext(this)">Show English translation</button>
-            <div class="ar-translation" style="display:none;margin-top:6px;direction:ltr;text-align:left;">
-              Welcome to <strong style="color:#B30000;font-weight:800;">Zomrah</strong>.
-            </div>
+<div class="main-wrapper">
+  <div class="chat-container">
+    <header>
+      <h1>محادثة مع زمرة <span class="blood-drop">🩸</span></h1>
+    </header>
+
+    <div id="chat-box">
+      <div class="message bot-message">
+        أهلاً بك في <strong style="color:var(--primary-red);font-weight:800;">زمرة</strong> — ابدأ بسؤال عن <strong>شروط الأهلية</strong>.
+        <div class="translation-block">
+          <button class="toggle-btn" onclick="toggleNext(this)">Show English translation</button>
+          <div class="ar-translation" style="display:none;margin-top:6px;direction:ltr;text-align:left;">
+            Welcome to <strong style="color:#B30000;font-weight:800;">Zomrah</strong> — start by asking about <strong>donation eligibility</strong>.
           </div>
         </div>
       </div>
-
-      <div class="input-area">
-        <input type="text" id="user-input" placeholder="اكتب سؤالك هنا..." autofocus/>
-        <button id="send-btn"><i class="fa-solid fa-paper-plane"></i> إرسال</button>
-      </div>
     </div>
 
-    <div class="sidebar-container">
-      <div class="sidebar-box" style="padding:0;overflow:hidden;border-radius:12px;">
-        <div id="mapid" style="height:230px;"></div>
-        <button class="sidebar-btn hospital" id="locate-center-btn" style="border-radius:0;margin:0;width:100%;">
-          <i class="fas fa-map-pin icon"></i><span class="label">حدد موقعي وأظهر المراكز</span>
-        </button>
-        <div class="map-filters">
-          <input id="map-search" type="text" placeholder="ابحث باسم المستشفى أو الحي..." />
-          <select id="map-sector">
-            <option value="">القطاع: الكل</option>
-            <option value="public">حكومي فقط</option>
-            <option value="private">خاص فقط</option>
-          </select>
-          <button id="map-apply" class="helper-btn">تطبيق</button>
-          <button id="map-reset" class="helper-btn">إعادة تعيين</button>
-          <button id="map-nearest" class="go-map-btn"><i class="fa-solid fa-route"></i> أقرب مركز الآن</button>
-          <div class="counter" id="map-counter">—</div>
-        </div>
-      </div>
-
-      <button class="sidebar-btn urgent" id="urgent-needs-btn">
-        <i class="fas fa-exclamation-triangle icon"></i>
-        <span class="label">الاحتياج العاجل للدم</span>
-      </button>
-
-      <button class="sidebar-btn map" id="eligibility-flow-btn">
-        <i class="fas fa-clipboard-check icon"></i>
-        <span class="label">فحص الأهلية</span>
-      </button>
-
-      <button class="sidebar-btn map" id="reminder-btn">
-        <i class="fas fa-bell icon"></i>
-        <span class="label">تذكير بموعد التبرع</span>
-      </button>
-
-      <a class="sidebar-btn whatsapp" target="_blank" rel="noopener"
-         href="https://wa.me/966504635135?text=%D8%A3%D9%87%D9%84%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AE%D8%AF%D9%85%D8%A9%20%D8%B2%D9%85%D8%B1%D8%A9.">
-        <i class="fab fa-whatsapp icon"></i><span class="label">تواصل مباشر (واتساب)</span>
-      </a>
-
-      <div class="sidebar-box">
-        <h2>❓ استفسارات شائعة</h2>
-        <div class="faq-list">
-          <div class="faq-item" onclick="sendQuickQuestion('ما هي شروط التبرع بالدم؟')">شروط التبرع الأساسية</div>
-          <div class="faq-item" onclick="sendQuickQuestion('متى أقدر أتبرع مرة أخرى؟')">المدة الفاصلة بين التبرعات</div>
-          <div class="faq-item" onclick="sendQuickQuestion('هل التبرع بالدم مؤلم؟')">الآثار الجانبية والمخاوف</div>
-        </div>
-      </div>
+    <div class="input-area">
+      <input type="text" id="user-input" placeholder="اكتب سؤالك هنا..." autofocus/>
+      <button id="send-btn">إرسال</button>
     </div>
   </div>
 
-  <script>
-    /* ===== 0) فحص SMTP ===== */
-    let SMTP_READY = false;
-    fetch('/health').then(r=>r.json()).then(j=>{ SMTP_READY = !!j.smtp_ready; }).catch(()=>{});
+  <div class="sidebar-container">
+    <div class="sidebar-box" style="padding:0;overflow:hidden;border-radius:12px;">
+      <div id="mapid" style="height:220px;"></div>
+      <button class="sidebar-btn hospital" id="locate-center-btn" style="border-radius:0;margin:0;width:100%;">
+        <i class="fas fa-map-pin icon"></i><span class="label">حدد موقعي وأظهر المراكز</span>
+      </button>
+      <div class="map-filters">
+        <input id="map-search" type="text" placeholder="ابحث باسم المستشفى أو الحي..."/>
+        <select id="map-sector">
+          <option value="">القطاع: الكل</option>
+          <option value="public">حكومي فقط</option>
+          <option value="private">خاص فقط</option>
+        </select>
+        <button id="map-apply" class="helper-btn">تطبيق</button>
+        <button id="map-reset" class="helper-btn">إعادة تعيين</button>
+        <button id="map-nearest" class="go-map-btn">أقرب مركز الآن</button>
+        <div class="counter" id="map-counter">—</div>
+      </div>
+    </div>
 
-    /* ===== 1) أدوات عامة ===== */
-    function toggleNext(btn){
-      var el = btn.nextElementSibling; if(!el) return;
-      var shown = el.style.display !== 'none';
-      el.style.display = shown ? 'none' : 'block';
-      btn.textContent = shown ? 'Show English translation' : 'Hide English translation';
-    }
-    function showLoading(){
-      var box = document.getElementById('chat-box');
-      var d = document.createElement('div'); d.className='message bot-message loading-message'; d.id='loading-indicator';
-      d.textContent='زمرة تكتب... 🧠'; box.appendChild(d); box.scrollTop=box.scrollHeight; return d;
-    }
-    function removeLoading(d){ if(d && d.parentNode) d.parentNode.removeChild(d); }
-    function displayMessage(text, who){
-      var box=document.getElementById('chat-box');
-      var d=document.createElement('div'); d.className='message '+(who==='user'?'user-message':'bot-message');
-      d.innerHTML = (text||'').replace(/\n/g,'<br>');
-      box.appendChild(d); box.scrollTop=box.scrollHeight;
-    }
-    function displayError(text){ displayMessage('<span class="error-message">'+text+'</span>','bot'); }
-    function setInteractionState(enabled){
-      ['send-btn','user-input','urgent-needs-btn','locate-center-btn','eligibility-flow-btn','reminder-btn'].forEach(function(id){
-        var el=document.getElementById(id); if(el) el.disabled=!enabled;
-      });
-      document.querySelectorAll('.faq-item').forEach(function(x){ x.style.pointerEvents='auto'; x.style.opacity='1'; });
-    }
+    <button class="sidebar-btn urgent" id="urgent-needs-btn">
+      <i class="fas fa-exclamation-triangle icon"></i><span class="label">الاحتياج العاجل للدم</span>
+    </button>
 
-    /* ===== 2) فقاعة قابلة للتمدد ===== */
-    function displayAnswerWithControls(summarizedText, originalQuestion){
-      var cb=document.getElementById('chat-box');
-      var m=document.createElement('div'); m.className='message bot-message';
-      var main=document.createElement('div'); main.className='ar-text';
-      main.innerHTML=(summarizedText||'').replace(/\n/g,'<br>'); m.appendChild(main);
+    <button class="sidebar-btn map" id="eligibility-flow-btn">
+      <i class="fas fa-clipboard-check icon"></i><span class="label">فحص الأهلية</span>
+    </button>
 
-      var btn=document.createElement('button'); btn.className='helper-btn'; btn.textContent='تفاصيل أكثر';
-      btn.dataset.state='collapsed'; btn.dataset.summarized=summarizedText||''; btn.dataset.question=originalQuestion||'';
-      m.appendChild(btn);
+    <button class="sidebar-btn map" id="reminder-btn">
+      <i class="fas fa-bell icon"></i><span class="label">تذكير بموعد التبرع</span>
+    </button>
 
-      var tr=document.createElement('div'); tr.className='translation-block';
-      tr.innerHTML='<button class="toggle-btn" onclick="toggleNext(this)">Show English translation</button><div class="ar-translation" style="display:none;margin-top:6px;direction:ltr;text-align:left;">(English translation appears here)</div>';
-      m.appendChild(tr);
+    <a class="sidebar-btn whatsapp" target="_blank" rel="noopener"
+       href="https://wa.me/966504635135?text=%D8%A3%D9%87%D9%84%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AE%D8%AF%D9%85%D8%A9%20%D8%B2%D9%85%D8%B1%D8%A9.">
+      <i class="fab fa-whatsapp icon"></i><span class="label">تواصل مباشر (واتساب)</span>
+    </a>
 
-      btn.addEventListener('click', async function(){
-        if(this.dataset.state==='collapsed'){
-          if(!this.dataset.detailed){
-            try{
-              const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:this.dataset.question||'',detail:true})});
-              if(!res.ok) throw new Error('HTTP '+res.status);
-              const j=await res.json(); this.dataset.detailed=j.answer||this.dataset.summarized;
-            }catch(e){ displayError('❌ فشل جلب التفاصيل.'); return; }
-          }
-          main.innerHTML=(this.dataset.detailed||'').replace(/\n/g,'<br>');
-          this.textContent='إظهار أقل'; this.dataset.state='expanded';
-        } else {
-          main.innerHTML=(this.dataset.summarized||'').replace(/\n/g,'<br>');
-          this.textContent='تفاصيل أكثر'; this.dataset.state='collapsed';
+    <div class="sidebar-box">
+      <h2>❓ استفسارات شائعة</h2>
+      <div class="faq-list">
+        <div class="faq-item" onclick="sendQuickQuestion('ما هي شروط التبرع بالدم؟')">شروط التبرع الأساسية</div>
+        <div class="faq-item" onclick="sendQuickQuestion('المدة الفاصلة بين التبرعات؟')">المدة الفاصلة بين التبرعات</div>
+        <div class="faq-item" onclick="sendQuickQuestion('هل التبرع بالدم مؤلم؟')">الآثار الجانبية والمخاوف</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== أدوات عامة =====
+  let SMTP_READY = false;
+  fetch('/health').then(r=>r.json()).then(j=>{ SMTP_READY = !!j.smtp_ready; }).catch(()=>{});
+
+  function toggleNext(btn){
+    const el = btn.nextElementSibling; if(!el) return;
+    const shown = el.style.display !== 'none';
+    el.style.display = shown ? 'none' : 'block';
+    btn.textContent = shown ? 'Show English translation' : 'Hide English translation';
+  }
+  function showLoading(){
+    const cb = document.getElementById('chat-box');
+    const d = document.createElement('div');
+    d.className='message bot-message loading-message'; d.id='loading-indicator';
+    d.textContent='زمرة تكتب... 🧠'; cb.appendChild(d); cb.scrollTop=cb.scrollHeight; return d;
+  }
+  function removeLoading(d){ if(d && d.parentNode) d.parentNode.removeChild(d); }
+  function displayMessage(text, who){
+    const cb = document.getElementById('chat-box');
+    const m = document.createElement('div');
+    m.className = 'message ' + (who==='user'?'user-message':'bot-message');
+    m.textContent = text; cb.appendChild(m); cb.scrollTop = cb.scrollHeight;
+  }
+  function displayError(text){
+    const cb = document.getElementById('chat-box');
+    const m = document.createElement('div');
+    m.className = 'message bot-message';
+    m.innerHTML = '<span class="error-message">'+text+'</span>';
+    cb.appendChild(m); cb.scrollTop = cb.scrollHeight;
+  }
+
+  // ===== فقاعة قابلة للتمدد =====
+  function displayAnswerWithControls(summary, question){
+    const cb=document.getElementById('chat-box');
+    const m=document.createElement('div'); m.className='message bot-message';
+
+    const main=document.createElement('div'); main.className='ar-text';
+    main.innerHTML=(summary||'').replace(/\n/g,'<br>');
+    m.appendChild(main);
+
+    const btn=document.createElement('button'); btn.className='helper-btn';
+    btn.textContent='تفاصيل أكثر'; btn.dataset.state='collapsed';
+    btn.dataset.summarized=summary||''; btn.dataset.question=question||'';
+    m.appendChild(btn);
+
+    const tr=document.createElement('div'); tr.className='translation-block';
+    tr.innerHTML='<button class="toggle-btn" onclick="toggleNext(this)">Show English translation</button><div class="ar-translation" style="display:none;margin-top:6px;direction:ltr;text-align:left;">(English translation appears when backend sends it)</div>';
+    m.appendChild(tr);
+
+    btn.addEventListener('click', async function(){
+      if(this.dataset.state==='collapsed'){
+        if(!this.dataset.detailed){
+          try{
+            const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:this.dataset.question||'',detail:true})});
+            const j=await res.json(); this.dataset.detailed=j.answer||this.dataset.summarized;
+          }catch(e){ displayError('❌ فشل جلب التفاصيل.'); return; }
         }
-      });
-
-      cb.appendChild(m); cb.scrollTop=cb.scrollHeight;
-    }
-
-    /* ===== 3) نية المواقع ===== */
-    const LOCATION_RE=/(موقع|الموقع|أقرب|قريب|الخرائط|الخريطة|map|nearest|location|directions|وين|اقرب)/i;
-    function isLocationIntent(t){ return LOCATION_RE.test((t||'').trim()); }
-
-    /* ===== 4) الخريطة ===== */
-    var JEDDAH_LAT=21.5433, JEDDAH_LNG=39.1728, DEFAULT_ZOOM=11;
-    var BLOOD_CENTERS=[], FILTERED_CENTERS=[], markersLayer=null, userLocation=null;
-
-    function gmapsDirections(fromLat,fromLng,toLat,toLng){
-      return 'https://www.google.com/maps/dir/?api=1&origin='+fromLat+','+fromLng+'&destination='+toLat+','+toLng+'&travelmode=driving';
-    }
-    function gmapsLinkByName(name){ return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(name); }
-    function toRad(v){ return v*Math.PI/180; }
-    function haversine(a,b,c,d){const R=6371;const dL=toRad(c-a), dG=toRad(d-b);const A=Math.sin(dL/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dG/2)**2;return R*2*Math.atan2(Math.sqrt(A),Math.sqrt(1-A));}
-    function findNearest(from){var best=null,bd=1e9; for(var i=0;i<FILTERED_CENTERS.length;i++){var c=FILTERED_CENTERS[i],d=haversine(from[0],from[1],c.lat,c.lng); if(d<bd){bd=d; best=c;}} return best;}
-
-    function detectSector(name=''){
-      const t=(name||'').trim();
-      const pub=/(الملك|التخصصي|العام|الجامعة|القوات|الحرس|مجمع|مدينة الملك|الثغر|العزيزية)/;
-      const pri=/(الدكتور|فقيه|السعودي الألماني|الأطباء المتحدون|السلامة|المغربي|الحياة|الطبي الدولي|المركز الطبي الدولي|السعودي الالماني)/;
-      if(pub.test(t)) return 'public'; if(pri.test(t)) return 'private'; return '';
-    }
-
-    function createPopupContent(c){
-      var link=gmapsLinkByName(c.name);
-      var phone=c.phone?('<p><strong>📞</strong> <a href="tel:'+c.phone+'" style="color:#0b7dda">'+c.phone+'</a></p>'):'<p><strong>📞</strong> —</p>';
-      var hours='<p><strong>⏱️</strong> '+(c.hours||'—')+'</p>';
-      return '<div class="hospital-popup">'+
-        '<strong><i class="fas fa-hospital"></i> '+c.name+'</strong>'+
-        '<p><strong>📍</strong> '+(c.address||'—')+'</p>'+
-        hours+phone+
-        '<a class="go-map-btn" href="'+link+'" target="_blank" rel="noopener"><i class="fas fa-route"></i> اضغط للتوجيه</a>'+
-      '</div>';
-    }
-
-    var map=L.map('mapid').setView([JEDDAH_LAT,JEDDAH_LNG],DEFAULT_ZOOM);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map);
-    var redMarker=L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',iconSize:[25,41],iconAnchor:[12,41],popupAnchor:[1,-34],shadowSize:[41,41]});
-    var blueMarker=L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',iconSize:[25,41],iconAnchor:[12,41],popupAnchor:[1,-34],shadowSize:[41,41]});
-
-    function renderCenters(list){
-      if(markersLayer){markersLayer.clearLayers(); map.removeLayer(markersLayer);}
-      markersLayer=L.layerGroup();
-      (list||[]).forEach(function(c){ L.marker([c.lat,c.lng],{icon:redMarker}).bindPopup(createPopupContent(c)).addTo(markersLayer); });
-      markersLayer.addTo(map);
-      document.getElementById('map-counter').textContent = list.length ? (list.length+' نتيجة') : 'لا توجد نتائج';
-    }
-
-    fetch('/static/centers_jeddah.json').then(r=>r.json()).then(list=>{
-      BLOOD_CENTERS=list.map(c=>{ if(!c.sector) c.sector=(c.type||detectSector(c.name)); return c; });
-      FILTERED_CENTERS=BLOOD_CENTERS.slice(); renderCenters(FILTERED_CENTERS);
-    }).catch(()=>displayError('تعذّر تحميل قائمة المراكز.'));
-
-    document.getElementById('locate-center-btn').addEventListener('click', function(){
-      var btn=this; btn.disabled=true; btn.querySelector('.label').innerText='جاري تحديد موقعك...';
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(function(pos){
-          userLocation=[pos.coords.latitude,pos.coords.longitude];
-          L.marker(userLocation,{icon:blueMarker}).addTo(map).bindPopup('موقعك الحالي').openPopup();
-          map.setView(userLocation,13);
-          btn.querySelector('.label').innerText='تم التحديد بنجاح'; btn.disabled=false;
-          displayMessage('📍 تم تحديد موقعك.','bot');
-        }, function(){
-          btn.querySelector('.label').innerText='فشل تحديد الموقع'; btn.disabled=false;
-          displayError('⚠️ اسمح للمتصفح بالوصول للموقع لاستخدام هذه الميزة.');
-        }, {enableHighAccuracy:true,timeout:10000});
-      } else { btn.querySelector('.label').innerText='غير مدعوم'; btn.disabled=false; displayError('❌ متصفحك لا يدعم تحديد الموقع.'); }
+        main.innerHTML=(this.dataset.detailed||'').replace(/\n/g,'<br>');
+        this.textContent='إظهار أقل'; this.dataset.state='expanded';
+      }else{
+        main.innerHTML=(this.dataset.summarized||'').replace(/\n/g,'<br>');
+        this.textContent='تفاصيل أكثر'; this.dataset.state='collapsed';
+      }
     });
 
-    function openNearestAuto(){
-      function go(lat,lng){
-        if(!FILTERED_CENTERS.length){ displayError('لا توجد مراكز مطابقة.'); return; }
-        var n=findNearest([lat,lng]); if(!n) return;
-        window.location.href = gmapsDirections(lat,lng,n.lat,n.lng);
-      }
-      if(userLocation) return go(userLocation[0],userLocation[1]);
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(p=>go(p.coords.latitude,p.coords.longitude),
-          ()=>displayError('اسمح بالوصول للموقع لاستخدام أقرب مركز.'), {enableHighAccuracy:true,timeout:8000});
-      }
-    }
-    document.getElementById('map-nearest').addEventListener('click', openNearestAuto);
+    cb.appendChild(m); cb.scrollTop=cb.scrollHeight;
+  }
 
-    function normalize(s){ return (s||'').toLowerCase().replace(/\s+/g,' ').trim(); }
-    function applyMapFilters(){
-      const q=normalize(document.getElementById('map-search').value);
-      const sector=document.getElementById('map-sector').value;
-      FILTERED_CENTERS=BLOOD_CENTERS.filter(c=>{
-        const hay=normalize((c.name||'')+' '+(c.address||'')); const matchText=!q || hay.indexOf(q)!==-1;
-        const s=(c.sector||'').toLowerCase(); const matchSector=!sector || s===sector; return matchText && matchSector;
+  // ===== خريطة جدة =====
+  const JEDDAH=[21.5433,39.1728], DEFAULT_ZOOM=11;
+  let BLOOD_CENTERS=[], FILTERED_CENTERS=[], markersLayer=null, userLocation=null;
+
+  function toRad(v){return v*Math.PI/180;}
+  function haversine(a,b,c,d){const R=6371, dLat=toRad(c-a), dLng=toRad(d-b); const s=Math.sin(dLat/2)**2 + Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dLng/2)**2; return R*2*Math.atan2(Math.sqrt(s),Math.sqrt(1-s));}
+  function findNearest(from){let best=null,bd=1e9; for(const c of FILTERED_CENTERS){const d=haversine(from[0],from[1],c.lat,c.lng); if(d<bd){bd=d; best=c;}} return best;}
+
+  const map=L.map('mapid').setView(JEDDAH,DEFAULT_ZOOM);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+  const redMarker=L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',iconSize:[25,41],iconAnchor:[12,41],popupAnchor:[1,-34],shadowSize:[41,41]});
+  const blueMarker=L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',iconSize:[25,41],iconAnchor:[12,41],popupAnchor:[1,-34],shadowSize:[41,41]});
+
+  function gmapsLinkByName(name){return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(name);}
+  function gmapsDirections(a,b,c,d){return 'https://www.google.com/maps/dir/?api=1&origin='+a+','+b+'&destination='+c+','+d+'&travelmode=driving';}
+
+  function createPopupContent(c){
+    const phone = c.phone ? `<p><span class="details-label">📞 التواصل:</span> <a href="tel:${c.phone}" style="color:#0b7dda">${c.phone}</a></p>` : '<p><span class="details-label">📞 التواصل:</span> —</p>';
+    const hours = `<p><span class="details-label">⏱️ ساعات العمل:</span> ${c.hours||'—'}</p>`;
+    return `<div><strong><i class="fas fa-hospital-alt"></i> ${c.name}</strong>
+      <p><span class="details-label">📍 العنوان:</span> ${c.address||'—'}</p>
+      ${hours}${phone}
+      <a class="go-map-btn" href="${gmapsLinkByName(c.name)}" target="_blank" rel="noopener"><i class="fas fa-route"></i> اضغط للتوجيه</a>
+    </div>`;
+  }
+
+  function renderCenters(list){
+    if(markersLayer){markersLayer.clearLayers(); map.removeLayer(markersLayer);}
+    markersLayer=L.layerGroup();
+    (list||[]).forEach(c=>{L.marker([c.lat,c.lng],{icon:redMarker}).bindPopup(createPopupContent(c)).addTo(markersLayer);});
+    markersLayer.addTo(map);
+    document.getElementById('map-counter').textContent = list.length ? (list.length+' نتيجة') : 'لا توجد نتائج';
+  }
+
+  fetch('/static/centers_jeddah.json').then(r=>r.json()).then(list=>{BLOOD_CENTERS=list; FILTERED_CENTERS=list.slice(); renderCenters(FILTERED_CENTERS);});
+
+  document.getElementById('locate-center-btn').addEventListener('click', ()=>{
+    const btn=document.getElementById('locate-center-btn'); btn.disabled=true; btn.querySelector('.label').innerText='جاري تحديد موقعك...';
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(pos=>{
+        userLocation=[pos.coords.latitude,pos.coords.longitude];
+        L.marker(userLocation,{icon:blueMarker}).addTo(map).bindPopup('موقعك الحالي').openPopup();
+        map.setView(userLocation,13); btn.disabled=false; btn.querySelector('.label').innerText='تم التحديد بنجاح'; displayMessage('📍 تم تحديد موقعك.','bot');
+      },()=>{btn.disabled=false; btn.querySelector('.label').innerText='فشل تحديد الموقع'; displayError('⚠️ يرجى منح إذن الموقع.');},{enableHighAccuracy:true,timeout:10000});
+    }else{btn.disabled=false; displayError('❌ متصفحك لا يدعم تحديد الموقع.');}
+  });
+
+  document.getElementById('map-nearest').addEventListener('click', ()=>{
+    function go(lat,lng){
+      if(!FILTERED_CENTERS.length){displayError('لا توجد مراكز مطابقة.'); return;}
+      const n=findNearest([lat,lng]); if(!n){displayError('تعذّر تحديد أقرب مركز.'); return;}
+      window.location.href=gmapsDirections(lat,lng,n.lat,n.lng);
+    }
+    if(userLocation){go(userLocation[0],userLocation[1]);}
+    else if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(p=>go(p.coords.latitude,p.coords.longitude),()=>displayError('اسمح بالوصول للموقع.'),{enableHighAccuracy:true,timeout:8000});
+    }else displayError('متصفحك لا يدعم تحديد الموقع.');
+  });
+
+  function normalize(s){return (s||'').toLowerCase().replace(/\s+/g,' ').trim();}
+  function applyMapFilters(){
+    const q=normalize(document.getElementById('map-search').value);
+    const sector=document.getElementById('map-sector').value;
+    FILTERED_CENTERS=BLOOD_CENTERS.filter(c=>{
+      const hay=normalize((c.name||'')+' '+(c.address||'')), matchText=!q||hay.includes(q);
+      const s=(c.sector||'').toLowerCase(), matchSector=!sector||s===sector;
+      return matchText && matchSector;
+    });
+    renderCenters(FILTERED_CENTERS);
+  }
+  document.getElementById('map-apply').addEventListener('click', applyMapFilters);
+  document.getElementById('map-reset').addEventListener('click', ()=>{document.getElementById('map-search').value='';document.getElementById('map-sector').value='';FILTERED_CENTERS=BLOOD_CENTERS.slice();renderCenters(FILTERED_CENTERS);map.setView(JEDDAH,DEFAULT_ZOOM);});
+  document.getElementById('map-search').addEventListener('keydown', e=>{if(e.key==='Enter') applyMapFilters();});
+  document.getElementById('map-sector').addEventListener('change', applyMapFilters);
+
+  // ===== الشات =====
+  let lastUserRaw='';
+  document.getElementById('user-input').addEventListener('keydown', e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();document.getElementById('send-btn').click();}});
+  document.getElementById('send-btn').addEventListener('click', async ()=>{
+    const f=document.getElementById('user-input'); const raw=(f.value||'').trim(); if(!raw) return; f.value=''; lastUserRaw=raw;
+    let L=null, data=null;
+    try{
+      L=showLoading();
+      const res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:raw})});
+      data=await res.json();
+    }catch(err){ displayError('❌ فشل الاتصال: '+err.message); removeLoading(L); return; }
+    removeLoading(L);
+    if(data){
+      const finalUserMessage=data.corrected_message||raw; displayMessage(finalUserMessage,'user'); displayAnswerWithControls(data.answer||'',finalUserMessage);
+      if(/(أقرب|قريب|الخريطة|الخرائط|map|nearest|directions|وين|اقرب)/i.test(raw)) document.getElementById('map-nearest').click();
+    }
+  });
+
+  // ===== الاحتياج العاجل =====
+  document.getElementById('urgent-needs-btn').addEventListener('click', async ()=>{
+    displayMessage('الاحتياج العاجل للدم','user');
+    try{
+      const r=await fetch('/api/urgent_needs'); const d=await r.json();
+      const cb=document.getElementById('chat-box'); const wrap=document.createElement('div'); wrap.className='message bot-message';
+      let html='<div><strong>الاحتياجات العاجلة للتبرع بالدم</strong></div><div class="urgent-needs-wrapper">';
+      (d.needs||[]).forEach(n=>{
+        const st=n.status||''; const cls=/جداً|critical/i.test(st)?'critical':(/عاجل|urgent/i.test(st)?'high':'low');
+        const link=n.location_url?(`<p><a class="go-map-btn" href="${n.location_url}" target="_blank" rel="noopener">اضغط للتوجيه</a></p>`):'';
+        html+=`<div class="urgent-card ${cls}"><strong><i class="fas fa-hospital-alt" style="margin-inline-end:8px;"></i> ${n.hospital||''}</strong><p>💬 ${n.details||'-'}</p>${link}<span class="status">${st}</span></div>`;
       });
-      renderCenters(FILTERED_CENTERS);
-      if(FILTERED_CENTERS.length){
-        const avgLat=FILTERED_CENTERS.reduce((a,c)=>a+c.lat,0)/FILTERED_CENTERS.length;
-        const avgLng=FILTERED_CENTERS.reduce((a,c)=>a+c.lng,0)/FILTERED_CENTERS.length;
-        map.setView([avgLat,avgLng],12);
-      }
-    }
-    document.getElementById('map-apply').addEventListener('click', applyMapFilters);
-    document.getElementById('map-reset').addEventListener('click', ()=>{document.getElementById('map-search').value='';document.getElementById('map-sector').value='';FILTERED_CENTERS=BLOOD_CENTERS.slice();renderCenters(FILTERED_CENTERS);map.setView([JEDDAH_LAT,JEDDAH_LNG],DEFAULT_ZOOM);});
-    document.getElementById('map-search').addEventListener('keydown', e=>{if(e.key==='Enter'){applyMapFilters();}});
+      html+='</div>'; wrap.innerHTML=html; cb.appendChild(wrap); cb.scrollTop=cb.scrollHeight;
+    }catch(e){ displayError('❌ فشل جلب الاحتياج العاجل.');}
+  });
 
-    /* ===== 5) الشات ===== */
-    var lastUserRaw='';
-    document.getElementById('user-input').addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('send-btn').click(); }});
-    document.getElementById('send-btn').addEventListener('click', async function(){
-      var f=document.getElementById('user-input'); var raw=(f.value||'').trim(); if(!raw) return; f.value=''; lastUserRaw=raw;
-      var Ld=null, data=null;
+  // ===== نموذج الأهلية =====
+  document.getElementById('eligibility-flow-btn').addEventListener('click', renderEligibilityForm);
+
+  function ynField(id,label){
+    return `<div style="margin-top:10px">
+      <label>${label}</label>
+      <div class="yn-group" data-id="${id}">
+        <button type="button" class="yn-btn" data-val="true"><span class="mark"></span>نعم</button>
+        <button type="button" class="yn-btn" data-val="false"><span class="mark"></span>لا</button>
+      </div>
+    </div>`;
+  }
+  function getYN(root,id){
+    const grp=root.querySelector(`.yn-group[data-id="${id}"]`);
+    if(!grp) return false; const act=grp.querySelector('.yn-btn.active');
+    return act ? (act.getAttribute('data-val')==='true') : false;
+  }
+
+  function renderEligibilityForm(){
+    const cb=document.getElementById('chat-box'); const card=document.createElement('div'); card.className='message bot-message';
+    let html='';
+    html+=`<div><strong>فحص الأهلية للتبرع</strong></div>
+      <div class="inline-note">أجب عن الأسئلة التالية ثم اضغط «إرسال التقييم».</div>
+      <div style="margin-top:10px"><label>النوع:</label>
+        <select id="elig-gender" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px">
+          <option value="male">ذكر</option>
+          <option value="female">أنثى</option>
+        </select>
+      </div>
+      <div style="margin-top:10px"><label>العمر</label><input id="elig-age" type="number" min="1" max="100" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>
+      <div style="margin-top:10px"><label>الوزن (كجم)</label><input id="elig-weight" type="number" min="30" max="300" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>
+      <div style="margin-top:10px"><label>متى كان آخر تبرع؟ (بالأيام)</label><input id="elig-last" type="number" min="0" max="2000" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>
+      ${ynField('on_anticoagulants','هل تتناول أدوية سيولة الدم حاليًا؟')}
+      ${ynField('on_antibiotics','هل تتناول مضادًا حيويًا لعدوى نشطة؟')}
+      ${ynField('has_cold','هل لديك أعراض زكام/حمى حاليًا؟')}
+      <div id="preg-block">${ynField('pregnant','هل أنتِ حامل حاليًا؟')}</div>
+      <div style="margin-top:10px"><label>عملية/قلع أسنان مؤخرًا — كم يوم مضى؟</label><input id="elig-proc" type="number" min="0" max="400" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>
+      <div style="margin-top:10px"><label>وشم/ثقب — آخر كم شهر؟</label><input id="elig-tattoo" type="number" min="0" max="48" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>
+      <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap"><button id="elig-submit" class="helper-btn">إرسال التقييم</button></div>`;
+    card.innerHTML=html; cb.appendChild(card); cb.scrollTop=cb.scrollHeight;
+
+    // تفعيل نعم/لا
+    card.querySelectorAll('.yn-btn').forEach(b=>{
+      b.addEventListener('click', function(){
+        const group=this.parentElement; group.querySelectorAll('.yn-btn').forEach(x=>x.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // إخفاء سؤال الحمل للذكور
+    const genderSel=card.querySelector('#elig-gender');
+    const pregBlock=card.querySelector('#preg-block');
+    function togglePreg(){ pregBlock.style.display = (genderSel.value==='female') ? 'block' : 'none'; }
+    genderSel.addEventListener('change', togglePreg); togglePreg();
+
+    card.querySelector('#elig-submit').addEventListener('click', async ()=>{
+      const payload={
+        age:Number(card.querySelector('#elig-age').value||0),
+        weight:Number(card.querySelector('#elig-weight').value||0),
+        last_donation_days:Number(card.querySelector('#elig-last').value||9999),
+        on_anticoagulants:getYN(card,'on_anticoagulants'),
+        on_antibiotics:getYN(card,'on_antibiotics'),
+        has_cold:getYN(card,'has_cold'),
+        pregnant: (genderSel.value==='female') ? getYN(card,'pregnant') : false,
+        recent_procedure_days:Number(card.querySelector('#elig-proc').value||9999),
+        tattoo_months:Number(card.querySelector('#elig-tattoo').value||999)
+      };
       try{
-        setInteractionState(false); Ld=showLoading();
-        var res=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:raw})});
-        if(!res.ok) throw new Error('HTTP '+res.status); data=await res.json();
-      }catch(e){ displayError('❌ فشل الاتصال بالخادم.'); removeLoading(Ld); setInteractionState(true); return; }
-      finally{ removeLoading(Ld); setInteractionState(true); }
-      if(data){ var finalUser=data.corrected_message||raw; displayMessage(finalUser,'user'); displayAnswerWithControls(data.answer||'',finalUser); if(isLocationIntent(raw)) openNearestAuto(); }
+        const r=await fetch('/api/eligibility/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+        const d=await r.json();
+        renderEligibilityResult(d);
+      }catch(e){ displayError('خطأ في فحص الأهلية.'); }
     });
+  }
 
-    /* ===== 6) الاحتياج العاجل ===== */
-    document.getElementById('urgent-needs-btn').addEventListener('click', async function(){
-      displayMessage('الاحتياج العاجل للدم','user');
-      try{
-        const r=await fetch('/api/urgent_needs'); const d=await r.json();
-        const cb=document.getElementById('chat-box'); const w=document.createElement('div'); w.className='message bot-message';
-        let html='<div><strong>الاحتياجات العاجلة للتبرع بالدم</strong></div><div class="urgent-needs-wrapper">';
-        (d.needs||[]).forEach(n=>{
-          var st=n.status||''; var cls=/جداً|critical/i.test(st)?'critical':(/عاجل|urgent/i.test(st)?'high':'low');
-          var link=n.location_url?('<p><a class="go-map-btn" href="'+n.location_url+'" target="_blank" rel="noopener">اضغط للتوجيه</a></p>'):'';
-          html+='<div class="urgent-card '+cls+'"><strong><i class="fas fa-hospital"></i> '+(n.hospital||'')+'</strong><p>💬 '+(n.details||'-')+'</p>'+link+'<span class="status">'+st+'</span></div>';
-        });
-        html+='</div>'; w.innerHTML=html; cb.appendChild(w); cb.scrollTop=cb.scrollHeight;
-      }catch(e){ displayError('❌ فشل جلب الاحتياج العاجل.'); }
-    });
-
-    /* ===== 7) فحص الأهلية ===== */
-    function ynField(id,label){
-      return '<div style="margin-top:10px"><label>'+label+'</label>'+
-        '<div class="yn-group" data-id="'+id+'">'+
-        '<button type="button" class="helper-btn" data-val="true">نعم</button>'+
-        '<button type="button" class="helper-btn" data-val="false">لا</button>'+
-        '</div></div>';
+  function renderEligibilityResult(data){
+    const cb=document.getElementById('chat-box');
+    const m=document.createElement('div'); m.className='message bot-message';
+    let html='';
+    if(data.eligible){ html+='<div>✅ مؤهل للتبرع حاليًا. أحسنت!</div>'; }
+    else{
+      html+='<div>❌ غير مؤهل حاليًا للأسباب التالية:</div><ul>';
+      (data.reasons||[]).forEach(x=> html+=`<li>${x}</li>`); html+='</ul>';
     }
-    function getYN(root,id){
-      var grp=root.querySelector('.yn-group[data-id="'+id+'"]'); if(!grp) return false;
-      var act=grp.querySelector('.helper-btn.active'); return act ? (act.getAttribute('data-val')==='true') : false;
+    if(data.next_eligible_date){
+      html+=`<div class="inline-note">📅 موعدك المقترح القادم: <strong>${data.next_eligible_date}</strong></div>`;
     }
-    function renderEligibilityForm(){
-      var cb=document.getElementById('chat-box'); var card=document.createElement('div'); card.className='message bot-message';
-      var html='<div><strong>فحص الأهلية للتبرع</strong></div><div class="inline-note">اختر نعم/لا بوضوح، ثم اضغط «إرسال التقييم».</div>';
-      html+='<div style="margin-top:10px"><label>الجنس</label><select id="elig-gender" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"><option value="male">ذكر</option><option value="female">أنثى</option><option value="other">آخر</option></select></div>';
-      html+='<div style="margin-top:10px"><label>العمر</label><input id="elig-age" type="number" min="1" max="100" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>';
-      html+='<div style="margin-top:10px"><label>الوزن (كجم)</label><input id="elig-weight" type="number" min="30" max="300" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>';
-      html+='<div style="margin-top:10px"><label>متى كان آخر تبرع لك؟ (بالأيام)</label><input id="elig-last" type="number" min="0" max="2000" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>';
+    html+='<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button class="helper-btn" id="add-rem-btn">أرسل تذكير بالإيميل</button></div>';
+    m.innerHTML=html; cb.appendChild(m); cb.scrollTop=cb.scrollHeight;
 
-      html+=ynField('on_anticoagulants','هل تتناول أدوية سيولة الدم الآن؟');
-      html+=ynField('on_antibiotics','هل تتناول مضادًا حيويًا لعدوى نشطة؟');
-      html+=ynField('has_cold','هل لديك أعراض زكام/حمى حاليًا؟');
-
-      html+='<div id="female-only">';
-      html+=ynField('pregnant','هل أنتِ حامل حاليًا؟');
-      html+=ynField('breastfeeding','هل أنتِ مرضعة؟');
-      html+='</div>';
-
-      html+='<div style="margin-top:10px"><label>إجراء جراحي/قلع أسنان: كم يوم مضى؟</label><input id="elig-proc" type="number" min="0" max="400" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>';
-      html+='<div style="margin-top:10px"><label>وشم/ثقب خلال كم شهر مضى؟</label><input id="elig-tattoo" type="number" min="0" max="48" style="width:100%;padding:8px;border:1px solid #ddd;border-radius:8px;margin-top:6px"/></div>';
-      html+=ynField('recent_travel','هل سافرت مؤخرًا لمناطق موبوءة أو خارج المملكة؟');
-
-      html+='<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">'+
-              '<button id="elig-submit" class="helper-btn">إرسال التقييم</button>'+
-            '</div>';
-      card.innerHTML=html; cb.appendChild(card); cb.scrollTop=cb.scrollHeight;
-
-      function toggleFemale(){
-        var g=card.querySelector('#elig-gender').value;
-        card.querySelector('#female-only').style.display = (g==='female') ? 'block' : 'none';
-      }
-      card.querySelector('#elig-gender').addEventListener('change', toggleFemale); toggleFemale();
-
-      card.querySelectorAll('.yn-group .helper-btn').forEach(function(b){
-        b.addEventListener('click', function(){
-          var all=this.parentElement.querySelectorAll('.helper-btn'); all.forEach(x=>x.classList.remove('active'));
-          this.classList.add('active');
-        });
-      });
-
-      card.querySelector('#elig-submit').addEventListener('click', async function(){
-        var payload={
-          gender: card.querySelector('#elig-gender').value,
-          age: Number(card.querySelector('#elig-age').value||0),
-          weight: Number(card.querySelector('#elig-weight').value||0),
-          last_donation_days: Number(card.querySelector('#elig-last').value||9999),
-          on_anticoagulants: getYN(card,'on_anticoagulants'),
-          on_antibiotics: getYN(card,'on_antibiotics'),
-          has_cold: getYN(card,'has_cold'),
-          pregnant: getYN(card,'pregnant'),
-          breastfeeding: getYN(card,'breastfeeding'),
-          recent_procedure_days: Number(card.querySelector('#elig-proc').value||9999),
-          tattoo_months: Number(card.querySelector('#elig-tattoo').value||999),
-          recent_travel: getYN(card,'recent_travel')
-        };
-        try{
-          const Ld=showLoading();
-          const r=await fetch('/api/eligibility/evaluate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-          const d=await r.json(); removeLoading(Ld);
-          var res='<div>'+ (d.eligible?'✅ مؤهل':'❌ غير مؤهل حاليًا') +'</div>';
-          if(!d.eligible && (d.reasons||[]).length){
-            res+='<ul>'+ (d.reasons||[]).map(x=>'<li>'+x+'</li>').join('') +'</ul>';
-          }
-          if(d.next_eligible_date){
-            res+='<div class="inline-note">📅 موعدك المقترح القادم: <strong>'+d.next_eligible_date+'</strong></div>';
-            res+='<div style="margin-top:8px"><button id="add-rem-btn" class="helper-btn">أرسل تذكير بالإيميل</button></div>';
-          }
-          displayMessage(res,'bot');
-
-          setTimeout(function(){
-            var btn=[...document.querySelectorAll('.helper-btn')].find(x=>x.id==='add-rem-btn');
-            if(btn){
-              btn.onclick=async function(){
-                const email = prompt('اكتب بريدك الإلكتروني لإرسال التذكير:');
-                if(!email){ displayError('لم يتم إدخال بريد.'); return; }
-                try{
-                  const rr=await fetch('/api/reminder/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email,next_date:d.next_eligible_date})});
-                  const jj=await rr.json();
-                  if(jj.ok) displayMessage('📧 تم إرسال التذكير على بريدك.','bot');
-                  else displayError('تعذّر إرسال البريد: '+(jj.error||'')); 
-                }catch(e){ displayError('تعذّر إرسال البريد.'); }
-              }
-            }
-          }, 50);
-
-        }catch(e){ displayError('خطأ في فحص الأهلية.'); }
-      });
-    }
-    document.getElementById('eligibility-flow-btn').addEventListener('click', renderEligibilityForm);
-
-    /* ===== 8) تذكير سريع زر مستقل ===== */
-    document.getElementById('reminder-btn').addEventListener('click', async function(){
+    m.querySelector('#add-rem-btn').addEventListener('click', async ()=>{
       const who=prompt('اسمك (اختياري):')||'User';
       try{
-        const r=await fetch('/api/reminder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_hint:who,channel:'email'})});
-        const j=await r.json();
-        if(!j.ok){ displayError('لم يتم تسجيل التذكير.'); return; }
-        const email=prompt('أدخل بريدك الإلكتروني لإرسال التذكير:');
-        if(email){
-          const rr=await fetch('/api/reminder/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ email: email, next_date: j.next_date })});
-          const jj=await rr.json();
-          if(jj.ok){
-            displayMessage('📧 تم إرسال التذكير على بريدك.','bot');
-          }else{
-            displayError('تعذّر إرسال البريد: '+(jj.error||''));
+        const r=await fetch('/api/reminder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_hint:who})});
+        const j=await r.json(); if(!j.ok){displayError('لم يتم تسجيل التذكير.'); return;}
+        if(SMTP_READY){
+          const email=prompt('أدخل بريدك الإلكتروني لاستلام التذكير:'); 
+          if(email && email.trim()){
+            const er=await fetch('/api/reminder/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim(), next_date: data.next_eligible_date})});
+            const ej=await er.json();
+            if(ej.ok) displayMessage('📩 تم إرسال التذكير عبر الإيميل.','bot');
+            else showNoEmailAlternatives(data.next_eligible_date, 'تعذّر إرسال البريد: '+(ej.error||''));
+          } else {
+            showNoEmailAlternatives(data.next_eligible_date,'—');
           }
-        }else{
-          displayError('لم يتم إدخال بريد.');
+        } else {
+          showNoEmailAlternatives(data.next_eligible_date,'SMTP غير مفعّل على الخادم.');
         }
-      }catch(e){
-        displayError('خطأ أثناء إنشاء التذكير.');
-      }
+      }catch(e){ displayError('خطأ أثناء إضافة التذكير.'); }
     });
+  }
 
-    /* ===== 9) FAQ إرسال سريع ===== */
-    window.sendQuickQuestion = function(q){
-      var f = document.getElementById('user-input');
-      f.value = q;
-      document.getElementById('send-btn').click();
-    };
-  </script>
+  function showNoEmailAlternatives(date, reason){
+    if(reason && reason !== '—') displayError('تعذّر إرسال البريد: '+reason);
+    const msg=encodeURIComponent(`تذكير زمرة: موعد تبرعك المقترح بتاريخ ${date}.`);
+    const wa=`https://wa.me/?text=${msg}`;
+    const cb=document.getElementById('chat-box'); const m=document.createElement('div'); m.className='message bot-message';
+    m.innerHTML=`<div>بدائل التذكير:</div>
+      <a class="go-map-btn" href="${wa}" target="_blank" rel="noopener">أرسل التذكير عبر واتساب</a>
+      <button class="helper-btn" id="dl-ics">حمّل موعد (.ics)</button>`;
+    cb.appendChild(m); cb.scrollTop=cb.scrollHeight;
+    m.querySelector('#dl-ics').addEventListener('click', ()=>downloadICS(date));
+  }
+
+  function downloadICS(nextDateStr){
+    try{
+      const dt=new Date(nextDateStr+'T09:00:00'); const dtEnd=new Date(dt.getTime()+60*60*1000);
+      function pad(n){return (n<10?'0':'')+n;} function fmt(d){return d.getUTCFullYear()+''+pad(d.getUTCMonth()+1)+pad(d.getUTCDate())+'T'+pad(d.getUTCHours())+pad(d.getUTCMinutes())+pad(d.getUTCSeconds())+'Z';}
+      const ics=`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Zomrah//Blood Donation Reminder//AR
+BEGIN:VEVENT
+UID:${Date.now()}@zomrah
+DTSTAMP:${fmt(new Date())}
+DTSTART:${fmt(dt)}
+DTEND:${fmt(dtEnd)}
+SUMMARY:تذكير التبرع بالدم
+DESCRIPTION:تذكير زمرة: موعد تبرعك المقترح.
+LOCATION:أقرب بنك دم
+END:VEVENT
+END:VCALENDAR`;
+      const blob=new Blob([ics],{type:'text/calendar;charset=utf-8'});
+      const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`Zomrah-Reminder-${nextDateStr}.ics`; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    }catch(e){ displayError('تعذّر إنشاء ملف التقويم.'); }
+  }
+
+  // ===== التذكير السريع من الشريط الجانبي =====
+  document.getElementById('reminder-btn').addEventListener('click', async ()=>{
+    const who=prompt('اسمك (اختياري):')||'User';
+    try{
+      const r=await fetch('/api/reminder',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_hint:who})});
+      const j=await r.json(); if(!j.ok){displayError('لم يتم تسجيل التذكير.'); return;}
+      displayMessage('⏰ تم تسجيل تذكير. موعدك المقترح القادم: '+j.next_date,'bot');
+      if(SMTP_READY){
+        const email=prompt('أدخل بريدك الإلكتروني لإرسال التذكير الآن:');
+        if(email && email.trim()){
+          const er=await fetch('/api/reminder/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.trim(), next_date:j.next_date})});
+          const ej=await er.json();
+          if(ej.ok) displayMessage('📩 تم إرسال التذكير عبر الإيميل.','bot');
+          else showNoEmailAlternatives(j.next_date, ej.error||'تعذّر إرسال البريد');
+        } else {
+          showNoEmailAlternatives(j.next_date,'—');
+        }
+      } else {
+        showNoEmailAlternatives(j.next_date,'SMTP غير مفعّل على الخادم.');
+      }
+    }catch(e){ displayError('خطأ أثناء إضافة التذكير.'); }
+  });
+
+  // ===== FAQ =====
+  window.sendQuickQuestion=function(q){
+    const f=document.getElementById('user-input'); f.value=q; document.getElementById('send-btn').click();
+  };
+</script>
 </body>
 </html>
