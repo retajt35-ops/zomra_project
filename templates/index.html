@@ -2,13 +2,15 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>زمرة | بوصلة الدم</title>
 
-  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet"/>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+  <!-- خطوط وأيقونات -->
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
   <style>
@@ -26,73 +28,350 @@
       --border-radius-lg:12px;--border-radius-sm:6px;
       --critical-red:#DC3545;--high-yellow:#FFC107;--low-blue:#17A2B8;
     }
-    body{font-family:'Tajawal',sans-serif;background:var(--background-light);margin:0;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;padding:20px;box-sizing:border-box;color:var(--primary-text)}
-    .main-wrapper{display:flex;flex-direction:row-reverse;width:100%;max-width:1300px;gap:25px;height:100%}
-    .chat-container{flex:3;background:var(--card-background);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-subtle);display:flex;flex-direction:column;overflow:hidden;height:calc(100vh - 40px);min-height:700px}
-    .sidebar-container{flex:1.2;display:flex;flex-direction:column;gap:20px}
-    .sidebar-box{background:var(--card-background);border-radius:var(--border-radius-lg);box-shadow:var(--shadow-subtle);padding:20px;display:flex;flex-direction:column;gap:15px}
-    .sidebar-box h2{color:var(--burgundy-dark);font-size:1.3em;font-weight:800;margin:0;padding-bottom:10px;border-bottom:2px solid #EEE}
-    .sidebar-btn{display:flex;flex-direction:row-reverse;align-items:center;gap:15px;padding:15px;border-radius:var(--border-radius-sm);text-decoration:none;color:#fff;transition:all .2s;border:none;cursor:pointer;min-height:60px;box-shadow:0 4px 8px rgba(0,0,0,.15)}
+    body{
+      font-family:'Tajawal',sans-serif;
+      background:var(--background-light);
+      margin:0;
+      display:flex;
+      justify-content:center;
+      align-items:flex-start;
+      min-height:100vh;
+      padding:20px;
+      box-sizing:border-box;
+      color:var(--primary-text)
+    }
+    .main-wrapper{
+      display:flex;
+      flex-direction:row-reverse;
+      width:100%;
+      max-width:1300px;
+      gap:25px;
+      height:100%
+    }
+    .chat-container{
+      flex:3;
+      background:var(--card-background);
+      border-radius:var(--border-radius-lg);
+      box-shadow:var(--shadow-subtle);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+      height:calc(100vh - 40px);
+      min-height:700px
+    }
+    .sidebar-container{
+      flex:1.2;
+      display:flex;
+      flex-direction:column;
+      gap:20px
+    }
+    .sidebar-box{
+      background:var(--card-background);
+      border-radius:var(--border-radius-lg);
+      box-shadow:var(--shadow-subtle);
+      padding:20px;
+      display:flex;
+      flex-direction:column;
+      gap:15px
+    }
+    .sidebar-box h2{
+      color:var(--burgundy-dark);
+      font-size:1.3em;
+      font-weight:800;
+      margin:0;
+      padding-bottom:10px;
+      border-bottom:2px solid #EEE
+    }
+    .sidebar-btn{
+      display:flex;
+      flex-direction:row-reverse;
+      align-items:center;
+      gap:15px;
+      padding:15px;
+      border-radius:var(--border-radius-sm);
+      text-decoration:none;
+      color:#fff;
+      transition:all .2s;
+      border:none;
+      cursor:pointer;
+      min-height:60px;
+      box-shadow:0 4px 8px rgba(0,0,0,.15)
+    }
     .sidebar-btn.hospital{background-image:var(--gradient-hospital-btn)}
     .sidebar-btn.urgent{background-image:var(--gradient-urgent-btn)}
     .sidebar-btn.map{background-image:var(--gradient-map-btn)}
     .sidebar-btn.whatsapp{background-image:var(--gradient-whatsapp-btn)}
     .sidebar-btn .icon{font-size:1.8em;color:#fff;font-weight:900}
     .sidebar-btn .label{font-weight:700;font-size:1em;flex-grow:1;text-align:right}
-    .sidebar-btn:hover:not(:disabled){transform:scale(1.02);opacity:.9;box-shadow:0 8px 16px rgba(0,0,0,.25)}
+    .sidebar-btn:hover:not(:disabled){
+      transform:scale(1.02);
+      opacity:.9;
+      box-shadow:0 8px 16px rgba(0,0,0,.25)
+    }
     .sidebar-btn:disabled{cursor:not-allowed;opacity:.6}
 
-    header{background:var(--gradient-header);padding:20px;border-bottom:1px solid #E0E0E0;text-align:right}
-    header h1{font-size:1.6em;margin:0;color:var(--burgundy-dark);font-weight:800;display:flex;align-items:center;flex-direction:row-reverse;justify-content:flex-end;gap:10px}
+    header{
+      background:var(--gradient-header);
+      padding:20px;
+      border-bottom:1px solid #E0E0E0;
+      text-align:right
+    }
+    header h1{
+      font-size:1.6em;
+      margin:0;
+      color:var(--burgundy-dark);
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      flex-direction:row-reverse;
+      justify-content:flex-end;
+      gap:10px
+    }
 
-    #chat-box{flex-grow:1;padding:20px 25px;overflow-y:auto;background:#FAFAFA;display:flex;flex-direction:column}
+    #chat-box{
+      flex-grow:1;
+      padding:20px 25px;
+      overflow-y:auto;
+      background:#FAFAFA;
+      display:flex;
+      flex-direction:column
+    }
 
-    .message{padding:14px 20px;margin-bottom:15px;border-radius:var(--border-radius-lg);max-width:70%;line-height:1.7;font-size:.95em;box-shadow:0 1px 2px rgba(0,0,0,.05)}
-    .bot-message{background:var(--bot-bubble);align-self:flex-start;border-bottom-left-radius:var(--border-radius-sm)}
-    .user-message{background:var(--user-bubble);color:#fff;align-self:flex-end;border-bottom-right-radius:var(--border-radius-sm)}
+    .message{
+      padding:14px 20px;
+      margin-bottom:15px;
+      border-radius:var(--border-radius-lg);
+      max-width:70%;
+      line-height:1.7;
+      font-size:.95em;
+      box-shadow:0 1px 2px rgba(0,0,0,.05)
+    }
+    .bot-message{
+      background:var(--bot-bubble);
+      align-self:flex-start;
+      border-bottom-left-radius:var(--border-radius-sm)
+    }
+    .user-message{
+      background:var(--user-bubble);
+      color:#fff;
+      align-self:flex-end;
+      border-bottom-right-radius:var(--border-radius-sm)
+    }
     .loading-message{font-weight:700;color:var(--secondary-text);background:#F0F0F0}
     .error-message{color:#666;font-weight:700}
 
-    .input-area{display:flex;padding:15px 20px;border-top:1px solid #E0E0E0;background:var(--card-background);flex-shrink:0}
-    #user-input{flex-grow:1;padding:12px 18px;border:2px solid var(--primary-red);border-radius:var(--border-radius-lg);margin-inline-end:10px;font-size:1em;outline:none;transition:border-color .2s}
+    .input-area{
+      display:flex;
+      align-items:center;
+      padding:15px 20px;
+      border-top:1px solid #E0E0E0;
+      background:var(--card-background);
+      flex-shrink:0;
+      gap:8px
+    }
+    #user-input{
+      flex-grow:1;
+      padding:12px 18px;
+      border:2px solid var(--primary-red);
+      border-radius:var(--border-radius-lg);
+      font-size:1em;
+      outline:none;
+      transition:border-color .2s
+    }
     #user-input:focus{border-color:var(--burgundy-dark)}
-    #send-btn{background:var(--gradient-send);color:#fff;border:none;padding:12px 30px;border-radius:var(--border-radius-lg);cursor:pointer;font-size:1em;font-weight:700;transition:opacity .2s,background .2s}
+    #send-btn{
+      background:var(--gradient-send);
+      color:#fff;
+      border:none;
+      padding:12px 24px;
+      border-radius:var(--border-radius-lg);
+      cursor:pointer;
+      font-size:1em;
+      font-weight:700;
+      transition:opacity .2s,background .2s;
+      white-space:nowrap
+    }
     #send-btn:hover:not(:disabled){opacity:.9}
     #send-btn:disabled{opacity:.6;cursor:not-allowed}
 
+    #mic-btn{
+      background:#eee;
+      border:none;
+      border-radius:50%;
+      width:40px;
+      height:40px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      font-size:1.1em;
+      transition:background .2s,transform .2s
+    }
+    #mic-btn:hover{background:#ddd;transform:translateY(-1px)}
+
+    #mic-btn.recording{
+      background:#ffcccc;
+      animation:pulse 1s infinite;
+    }
+    @keyframes pulse{
+      0%{transform:scale(1);}
+      50%{transform:scale(1.08);}
+      100%{transform:scale(1);}
+    }
+
     .translation-block{margin-top:10px}
-    .toggle-btn{margin-top:8px;background:#eee;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700}
-    .helper-btn{margin-top:8px;background:#fff;border:1px solid #ddd;border-radius:8px;padding:6px 10px;cursor:pointer;font-weight:700}
+    .toggle-btn{
+      margin-top:8px;
+      background:#eee;
+      border:none;
+      border-radius:8px;
+      padding:6px 10px;
+      cursor:pointer;
+      font-weight:700
+    }
+    .helper-btn{
+      margin-top:8px;
+      background:#fff;
+      border:1px solid #ddd;
+      border-radius:8px;
+      padding:6px 10px;
+      cursor:pointer;
+      font-weight:700
+    }
     .inline-note{font-size:.9em;color:var(--secondary-text);margin-top:6px}
 
     .faq-list{display:flex;flex-direction:column;gap:10px}
-    .faq-item{background:#fafafa;border:1px solid #eee;border-radius:10px;padding:10px 12px;cursor:pointer;font-weight:700;transition:transform .15s, background .15s, border-color .15s;user-select:none}
-    .faq-item:hover{transform:translateY(-1px);background:#fefefe;border-color:#e2e2e2}
+    .faq-item{
+      background:#fafafa;
+      border:1px solid #eee;
+      border-radius:10px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:700;
+      transition:transform .15s, background .15s, border-color .15s;
+      user-select:none
+    }
+    .faq-item:hover{
+      transform:translateY(-1px);
+      background:#fefefe;
+      border-color:#e2e2e2
+    }
 
-    /* عناصر نموذج الأهلية */
-    .pill{display:inline-block;padding:6px 10px;border:1px solid #ddd;border-radius:999px;margin:4px;cursor:pointer;font-weight:700;background:#fff}
+    .pill{
+      display:inline-block;
+      padding:6px 10px;
+      border:1px solid #ddd;
+      border-radius:999px;
+      margin:4px;
+      cursor:pointer;
+      font-weight:700;
+      background:#fff
+    }
     .pill.active{background:#B30000;color:#fff;border-color:#B30000}
     .elig-row{margin:8px 0}
-    .elig-row label{display:block;margin-bottom:6px;font-weight:800;color:#555}
-    .elig-input{padding:8px 10px;border:1px solid #ddd;border-radius:8px;width:100%;max-width:260px;font-family:inherit}
-    .elig-result{margin-top:10px;padding:10px;border-radius:10px;border:1px dashed #ddd;background:#fafafa}
+    .elig-row label{
+      display:block;
+      margin-bottom:6px;
+      font-weight:800;
+      color:#555
+    }
+    .elig-input{
+      padding:8px 10px;
+      border:1px solid #ddd;
+      border-radius:8px;
+      width:100%;
+      max-width:260px;
+      font-family:inherit
+    }
+    .elig-result{
+      margin-top:10px;
+      padding:10px;
+      border-radius:10px;
+      border:1px dashed #ddd;
+      background:#fafafa
+    }
     .elig-result.ok{border-color:#3fb950;background:#f1fff3}
     .elig-result.bad{border-color:#d73a49;background:#fff5f5}
     .muted{color:#888}
 
-    /* خريطة + فلاتر */
     .go-map-btn{
-      display:inline-block;margin-top:8px;padding:8px 12px;border-radius:10px;
-      background:linear-gradient(to left,#800020,#B30000);color:#fff;text-decoration:none;
-      font-weight:800;border:none;box-shadow:0 4px 8px rgba(0,0,0,.15)
+      display:inline-block;
+      margin-top:8px;
+      padding:8px 12px;
+      border-radius:10px;
+      background:linear-gradient(to left,#800020,#B30000);
+      color:#fff;
+      text-decoration:none;
+      font-weight:800;
+      border:none;
+      box-shadow:0 4px 8px rgba(0,0,0,.15);
+      cursor:pointer
     }
     .go-map-btn:hover{opacity:.92;transform:translateY(-1px)}
     .hospital-popup strong{display:block;margin-bottom:6px}
     .details-label{font-weight:700}
 
-    .map-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:10px;border-top:1px solid #eee;background:#fff}
-    .map-filters input,.map-filters select{padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-family:inherit}
+    .map-filters{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      align-items:center;
+      padding:10px;
+      border-top:1px solid #eee;
+      background:#fff
+    }
+    .map-filters input,.map-filters select{
+      padding:8px 10px;
+      border:1px solid #ddd;
+      border-radius:8px;
+      font-family:inherit
+    }
     .map-filters .counter{font-size:.9em;color:#555;margin-inline-start:auto}
+
+    .urgent-wrapper{
+      margin-top:8px;
+      display:flex;
+      flex-direction:column;
+      gap:10px
+    }
+    .urgent-card{
+      border-radius:10px;
+      padding:12px 14px;
+      background:#fff4f4;
+      border:1px solid #f1c0c0;
+      cursor:pointer;
+      transition:transform .15s, box-shadow .15s
+    }
+    .urgent-card:hover{
+      transform:translateY(-1px);
+      box-shadow:var(--shadow-subtle)
+    }
+    .urgent-card .title{font-weight:800;margin-bottom:4px}
+    .urgent-card .badge{
+      display:inline-block;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:.8em;
+      margin-bottom:6px;
+      color:#fff
+    }
+    .urgent-card.critical{border-color:#DC3545;background:#ffe6e9}
+    .urgent-card.critical .badge{background:#DC3545}
+    .urgent-card.high{border-color:#FFC107;background:#fff8e1}
+    .urgent-card.high .badge{background:#FFC107;color:#000}
+    .urgent-card.normal{border-color:#17A2B8;background:#e5f8ff}
+    .urgent-card.normal .badge{background:#17A2B8}
+
+    @media (max-width: 900px){
+      .main-wrapper{
+        flex-direction:column;
+        height:auto
+      }
+      .chat-container{
+        height:auto;
+        min-height:500px
+      }
+    }
   </style>
 </head>
 <body>
@@ -116,6 +395,10 @@
       </div>
 
       <div class="input-area">
+        <button id="mic-btn" type="button" title="إرسال صوتي">
+          <i class="fas fa-microphone"></i>
+        </button>
+        <input type="file" id="audio-input" accept="audio/*" style="display:none" />
         <input type="text" id="user-input" placeholder="اكتب سؤالك هنا..." autofocus/>
         <button id="send-btn">إرسال</button>
       </div>
@@ -129,7 +412,6 @@
           <span class="label">حدد موقعي وأظهر المراكز</span>
         </button>
 
-        <!-- ✅ فلاتر الخريطة -->
         <div class="map-filters">
           <input id="map-search" type="text" placeholder="ابحث باسم المستشفى أو الحي..." />
           <select id="map-sector">
@@ -139,7 +421,6 @@
           </select>
           <button id="map-apply" class="helper-btn">تطبيق</button>
           <button id="map-reset" class="helper-btn">إعادة تعيين</button>
-          <!-- ✅ زر أقرب مركز الآن -->
           <button id="map-nearest" class="go-map-btn">أقرب مركز الآن</button>
           <div class="counter" id="map-counter">—</div>
         </div>
@@ -178,11 +459,16 @@
   </div>
 
   <script>
-    /* ===== 0) حالة SMTP من /health ===== */
     let SMTP_READY = false;
-    fetch('/health').then(r=>r.json()).then(j=>{ SMTP_READY = !!j.smtp_ready; }).catch(()=>{ SMTP_READY=false; });
+    let SENDGRID_READY = false;
+    fetch('/health')
+      .then(r=>r.json())
+      .then(j=>{
+        SMTP_READY = !!j.smtp_ready;
+        SENDGRID_READY = !!j.sendgrid_ready;
+      })
+      .catch(()=>{ SMTP_READY = false; SENDGRID_READY = false; });
 
-    /* ===== 1) أدوات عامة ===== */
     function toggleNext(btn){
       var el = btn.nextElementSibling;
       if(!el) return;
@@ -218,7 +504,6 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    /* ===== 2) فقاعة قابلة للتمدد ===== */
     function displayAnswerWithControls(summarizedText, originalQuestion){
       var cb = document.getElementById('chat-box');
       var m = document.createElement('div');
@@ -275,25 +560,22 @@
       cb.scrollTop = cb.scrollHeight;
     }
 
-    /* ===== 3) تمكين التفاعل ===== */
     function setInteractionState(enabled){
-      ['send-btn','user-input','urgent-needs-btn','locate-center-btn','eligibility-flow-btn','reminder-btn'].forEach(function(id){
+      ['send-btn','user-input','urgent-needs-btn','locate-center-btn','eligibility-flow-btn','reminder-btn','mic-btn'].forEach(function(id){
         var el = document.getElementById(id);
         if(el){ el.disabled = !enabled; }
       });
       var faq = document.querySelectorAll('.faq-item');
       for(var i=0;i<faq.length;i++){
-        faq[i].style.pointerEvents = 'auto';
-        faq[i].style.opacity = '1';
-        faq[i].style.cursor = 'pointer';
+        faq[i].style.pointerEvents = enabled ? 'auto' : 'none';
+        faq[i].style.opacity = enabled ? '1' : '0.6';
+        faq[i].style.cursor = enabled ? 'pointer' : 'default';
       }
     }
 
-    /* ===== 4) نية المكان/الخريطة ===== */
     const LOCATION_RE = /(موقع|الموقع|أقرب|قريب|الخرائط|الخريطة|map|nearest|location|directions|وين|اقرب)/i;
     function isLocationIntent(t){ return LOCATION_RE.test((t||'').trim()); }
 
-    /* ===== 5) الخريطة ===== */
     var JEDDAH_LAT = 21.5433, JEDDAH_LNG = 39.1728, DEFAULT_ZOOM = 11;
     var BLOOD_CENTERS = [];
     var FILTERED_CENTERS = [];
@@ -358,7 +640,6 @@
       document.getElementById('map-counter').textContent = list.length ? (list.length + ' نتيجة') : 'لا توجد نتائج';
     }
 
-    // تحميل المراكز
     fetch('/static/centers_jeddah.json')
       .then(r=>r.json())
       .then(list=>{
@@ -436,7 +717,6 @@
       }
     });
 
-    /* ===== 6) فلترة الخريطة ===== */
     function normalize(s){ return (s||'').toLowerCase().replace(/\s+/g,' ').trim(); }
     function applyMapFilters(){
       const q = normalize(document.getElementById('map-search').value);
@@ -468,7 +748,6 @@
     });
     document.getElementById('map-sector').addEventListener('change', applyMapFilters);
 
-    /* ===== 7) التذكير عبر الإيميل + بدائل ===== */
     function emailValid(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e||'').trim()); }
     function addReminderFallbackUI(next_date){
       const cb = document.getElementById('chat-box');
@@ -488,7 +767,6 @@
       cb.scrollTop = cb.scrollHeight;
     }
 
-    /* ===== 8) الشات ===== */
     var lastUserRaw = '';
     document.getElementById('user-input').addEventListener('keydown', function(e){
       if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('send-btn').click(); }
@@ -524,7 +802,6 @@
       }
     });
 
-    /* ===== 9) بناء نموذج الأهلية ===== */
     function pill(id, group, value, label){
       return `<span class="pill" id="${id}" data-group="${group}" data-value="${value}">${label}</span>`;
     }
@@ -596,14 +873,12 @@
       cb.scrollTop = cb.scrollHeight;
     }
 
-    // تفعيل اختيار الحبوب (gender/yes-no) بتفويض أحداث
     document.addEventListener('click', function(e){
       if (e.target && e.target.classList.contains('pill')) {
         const g = e.target.dataset.group;
         document.querySelectorAll('.pill[data-group="'+g+'"]').forEach(p=>p.classList.remove('active'));
         e.target.classList.add('active');
 
-        // إظهار سؤال الحمل فقط لو أنثى
         if (g === 'gender') {
           const v = e.target.dataset.value;
           const fem = document.querySelector('.only-female');
@@ -612,12 +887,10 @@
       }
     });
 
-    // زر فتح نموذج الأهلية
     document.getElementById('eligibility-flow-btn').addEventListener('click', function(){
       buildEligibilityUI();
     });
 
-    // قياس الأهلية (تفويض أحداث يضمن عمل الزر دائمًا)
     document.addEventListener('click', async function(e){
       if (e.target && e.target.id === 'elig-submit') {
         const gActive = document.querySelector('.pill[data-group="gender"].active');
@@ -675,7 +948,6 @@
       }
     });
 
-    /* ===== 10) زر التذكير ===== */
     document.getElementById('reminder-btn').addEventListener('click', async function(){
       const who = (prompt('اسمك (اختياري):') || 'User').trim();
       const email = (prompt('أدخل بريدك الإلكتروني لاستلام التذكير (مثال: name@example.com):') || '').trim();
@@ -709,7 +981,153 @@
       }
     });
 
-    /* ===== 11) FAQ إرسال سريع ===== */
+    document.getElementById('urgent-needs-btn').addEventListener('click', async function(){
+      const cb = document.getElementById('chat-box');
+      const loading = document.createElement('div');
+      loading.className = 'message bot-message loading-message';
+      loading.textContent = 'جاري جلب الاحتياج العاجل من المستشفيات...';
+      cb.appendChild(loading);
+      cb.scrollTop = cb.scrollHeight;
+
+      try{
+        const res = await fetch('/api/urgent_needs');
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const j = await res.json();
+        cb.removeChild(loading);
+
+        const wrap = document.createElement('div');
+        wrap.className = 'message bot-message';
+        let html = `<div style="font-weight:800;margin-bottom:6px;">الاحتياج العاجل للدم (جدة وما حولها)</div>`;
+        html += `<div class="inline-note" style="margin-bottom:8px;">${j.answer_ar || ''}</div>`;
+        html += `<div class="urgent-wrapper">`;
+
+        (j.needs || []).forEach(n=>{
+          const status = (n.status || '').trim();
+          let cls = 'normal';
+          if (/عاجل|طارئ|مرتفع جداً/i.test(status)) cls = 'critical';
+          else if (/مرتفع|متوسط/i.test(status)) cls = 'high';
+
+          html += `
+            <div class="urgent-card ${cls}" data-url="${n.location_url || ''}">
+              <div class="title">🏥 ${n.hospital || 'مستشفى غير معروف'}</div>
+              <div class="badge">${status || 'حالة غير محددة'}</div>
+              <div>🔍 ${n.details || 'تفاصيل غير مذكورة'}</div>
+              ${n.location_url ? `<div style="margin-top:6px;"><button class="go-map-btn" type="button">التوجيه على الخرائط</button></div>` : ''}
+            </div>
+          `;
+        });
+        html += `</div>`;
+        wrap.innerHTML = html;
+        cb.appendChild(wrap);
+        cb.scrollTop = cb.scrollHeight;
+
+        wrap.querySelectorAll('.urgent-card').forEach(card=>{
+          const url = card.getAttribute('data-url');
+          if(!url) return;
+          card.addEventListener('click', function(e){
+            if(e.target && e.target.classList.contains('go-map-btn')){
+              window.open(url, '_blank');
+            }else{
+              window.open(url, '_blank');
+            }
+          });
+        });
+      }catch(e){
+        try{ cb.removeChild(loading); }catch(_){}
+        displayError('تعذّر جلب بيانات الاحتياج العاجل: '+e.message);
+      }
+    });
+
+    const micBtn = document.getElementById('mic-btn');
+    const audioInput = document.getElementById('audio-input');
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    async function sendAudioBlob(blob, filename) {
+      const loading = showLoading();
+      try {
+        const fd = new FormData();
+        fd.append('audio_file', blob, filename || 'recording.webm');
+        const res = await fetch('/api/upload_audio', {
+          method:'POST',
+          body: fd
+        });
+        if (!res.ok) throw new Error('HTTP '+res.status);
+        const j = await res.json();
+        removeLoading(loading);
+
+        displayMessage('🎙️ (رسالة صوتية)', 'user');
+        displayAnswerWithControls(j.answer || '', j.corrected_message || j.transcribed_text || '');
+      } catch(e) {
+        removeLoading(loading);
+        displayError('فشل معالجة الصوت: '+e.message);
+      }
+    }
+
+    micBtn.addEventListener('click', async function(){
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        if (!isRecording) {
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = e => {
+              if (e.data.size > 0) audioChunks.push(e.data);
+            };
+            mediaRecorder.onstop = () => {
+              const blob = new Blob(audioChunks, { type: 'audio/webm' });
+              sendAudioBlob(blob, 'mic_recording.webm');
+              stream.getTracks().forEach(t => t.stop());
+            };
+            mediaRecorder.start();
+            isRecording = true;
+            micBtn.classList.add('recording');
+            micBtn.title = 'إيقاف التسجيل';
+          } catch (err) {
+            console.error(err);
+            audioInput.click();
+          }
+        } else {
+          isRecording = false;
+          micBtn.classList.remove('recording');
+          micBtn.title = 'إرسال صوتي';
+          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+            mediaRecorder.stop();
+          }
+        }
+      } else {
+        audioInput.click();
+      }
+    });
+
+    audioInput.addEventListener('change', async function(){
+      if (!this.files || !this.files.length) return;
+      const file = this.files[0];
+      const loading = showLoading();
+
+      try {
+        const fd = new FormData();
+        fd.append('audio_file', file);
+        const res = await fetch('/api/upload_audio', {
+          method:'POST',
+          body: fd
+        });
+        if(!res.ok) throw new Error('HTTP '+res.status);
+        const j = await res.json();
+        removeLoading(loading);
+
+        displayMessage('🎙️ ('+ (file.name || 'ملف صوتي') +')', 'user');
+        displayAnswerWithControls(j.answer || '', j.corrected_message || j.transcribed_text || '');
+      } catch(e) {
+        removeLoading(loading);
+        displayError('فشل رفع الملف الصوتي: '+e.message);
+      } finally {
+        this.value = '';
+      }
+    });
+
     window.sendQuickQuestion = function(q){
       var f = document.getElementById('user-input');
       f.value = q;
