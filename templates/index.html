@@ -114,7 +114,12 @@
       background:var(--gradient-header);
       padding:20px;
       border-bottom:1px solid #E0E0E0;
-      text-align:right
+    }
+    .header-bar{
+      display:flex;
+      flex-direction:row-reverse;
+      align-items:center;
+      gap:10px;
     }
     header h1{
       font-size:1.6em;
@@ -126,6 +131,16 @@
       flex-direction:row-reverse;
       justify-content:flex-end;
       gap:10px
+    }
+    .lang-toggle{
+      margin-inline-start:auto;
+      background:#eee;
+      border:none;
+      border-radius:999px;
+      padding:6px 12px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:.9em;
     }
 
     #chat-box{
@@ -372,6 +387,35 @@
         min-height:500px
       }
     }
+
+    /* ------------- وضع اللغة الإنجليزية (LTR) ------------- */
+    html[dir="ltr"] body{
+      direction:ltr;
+    }
+    html[dir="ltr"] .main-wrapper{
+      flex-direction:row;
+    }
+    html[dir="ltr"] .header-bar{
+      flex-direction:row;
+    }
+    html[dir="ltr"] header h1{
+      flex-direction:row;
+      justify-content:flex-start;
+    }
+    html[dir="ltr"] .sidebar-btn{
+      flex-direction:row;
+      text-align:left;
+    }
+    html[dir="ltr"] .sidebar-btn .label{
+      text-align:left;
+    }
+    html[dir="ltr"] .faq-item{
+      text-align:left;
+    }
+    html[dir="ltr"] .map-filters .counter{
+      margin-inline-start:0;
+      margin-inline-end:auto;
+    }
   </style>
 </head>
 <body>
@@ -379,11 +423,14 @@
   <div class="main-wrapper">
     <div class="chat-container">
       <header>
-        <h1>محادثة مع زمرة <span class="blood-drop">🩸</span></h1>
+        <div class="header-bar">
+          <h1 id="title-text">محادثة مع زمرة <span class="blood-drop">🩸</span></h1>
+          <button id="lang-toggle" class="lang-toggle">English</button>
+        </div>
       </header>
 
       <div id="chat-box">
-        <div class="message bot-message">
+        <div class="message bot-message" id="welcome-message">
           أهلاً بك في <strong style="color:var(--primary-red);font-weight:800;">زمرة</strong> — ابدأ بسؤال عن <strong>شروط الأهلية</strong>.
           <div class="translation-block">
             <button class="toggle-btn" onclick="toggleNext(this)">Show English translation</button>
@@ -409,15 +456,15 @@
         <div id="mapid" style="height:220px;"></div>
         <button class="sidebar-btn hospital" id="locate-center-btn" style="border-radius:0;margin:0;width:100%;">
           <i class="fas fa-map-pin icon" style="font-size:1.4em;"></i>
-          <span class="label">حدد موقعي وأظهر المراكز</span>
+          <span class="label" id="locate-label">حدد موقعي وأظهر المراكز</span>
         </button>
 
         <div class="map-filters">
           <input id="map-search" type="text" placeholder="ابحث باسم المستشفى أو الحي..." />
           <select id="map-sector">
-            <option value="">القطاع: الكل</option>
-            <option value="public">حكومي فقط</option>
-            <option value="private">خاص فقط</option>
+            <option value="" id="sector-all">القطاع: الكل</option>
+            <option value="public" id="sector-public">حكومي فقط</option>
+            <option value="private" id="sector-private">خاص فقط</option>
           </select>
           <button id="map-apply" class="helper-btn">تطبيق</button>
           <button id="map-reset" class="helper-btn">إعادة تعيين</button>
@@ -428,37 +475,195 @@
 
       <button class="sidebar-btn urgent" id="urgent-needs-btn">
         <i class="fas fa-exclamation-triangle icon"></i>
-        <span class="label">الاحتياج العاجل للدم</span>
+        <span class="label" id="urgent-label">الاحتياج العاجل للدم</span>
       </button>
 
       <button class="sidebar-btn map" id="eligibility-flow-btn">
         <i class="fas fa-clipboard-check icon"></i>
-        <span class="label">فحص الأهلية</span>
+        <span class="label" id="elig-label">فحص الأهلية</span>
       </button>
 
       <button class="sidebar-btn map" id="reminder-btn">
         <i class="fas fa-bell icon"></i>
-        <span class="label">تذكير بموعد التبرع</span>
+        <span class="label" id="reminder-label">تذكير بموعد التبرع</span>
       </button>
 
       <a class="sidebar-btn whatsapp" target="_blank" rel="noopener"
          href="https://wa.me/966504635135?text=%D8%A3%D9%87%D9%84%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AE%D8%AF%D9%85%D8%A9%20%D8%B2%D9%85%D8%B1%D8%A9.">
         <i class="fab fa-whatsapp icon"></i>
-        <span class="label">تواصل مباشر (واتساب)</span>
+        <span class="label" id="wa-label">تواصل مباشر (واتساب)</span>
       </a>
 
       <div class="sidebar-box">
-        <h2>❓ استفسارات شائعة</h2>
+        <h2 id="faq-title">❓ استفسارات شائعة</h2>
         <div class="faq-list">
-          <div class="faq-item" onclick="sendQuickQuestion('ما هي شروط التبرع بالدم؟')">شروط التبرع الأساسية</div>
-          <div class="faq-item" onclick="sendQuickQuestion('متى أقدر أتبرع مرة أخرى؟')">المدة الفاصلة بين التبرعات</div>
-          <div class="faq-item" onclick="sendQuickQuestion('هل التبرع بالدم مؤلم؟')">الآثار الجانبية والمخاوف</div>
+          <div class="faq-item" id="faq-1" onclick="sendQuickQuestion(
+            'ما هي شروط التبرع بالدم؟',
+            'What are the basic conditions for donating blood?'
+          )">شروط التبرع الأساسية</div>
+
+          <div class="faq-item" id="faq-2" onclick="sendQuickQuestion(
+            'متى أقدر أتبرع مرة أخرى؟',
+            'When can I donate blood again?'
+          )">المدة الفاصلة بين التبرعات</div>
+
+          <div class="faq-item" id="faq-3" onclick="sendQuickQuestion(
+            'هل التبرع بالدم مؤلم؟',
+            'Is blood donation painful?'
+          )">الآثار الجانبية والمخاوف</div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
+    /* ---------------------- حالة اللغة الحالية ---------------------- */
+    let currentLang = 'ar';
+
+    const uiTexts = {
+      ar: {
+        title: 'محادثة مع زمرة <span class="blood-drop">🩸</span>',
+        toggle: 'English',
+        welcome: 'أهلاً بك في <strong style="color:var(--primary-red);font-weight:800;">زمرة</strong> — ابدأ بسؤال عن <strong>شروط الأهلية</strong>.',
+        welcomeTranslationBtn: 'Show English translation',
+        welcomeTranslation: 'Welcome to <strong style="color:#B30000;font-weight:800;">Zomrah</strong> — start by asking about <strong>donation eligibility</strong>.',
+        inputPlaceholder: 'اكتب سؤالك هنا...',
+        sendBtn: 'إرسال',
+        micTitle: 'إرسال صوتي',
+        locateLabel: 'حدد موقعي وأظهر المراكز',
+        mapSearch: 'ابحث باسم المستشفى أو الحي...',
+        sectorAll: 'القطاع: الكل',
+        sectorPublic: 'حكومي فقط',
+        sectorPrivate: 'خاص فقط',
+        mapApply: 'تطبيق',
+        mapReset: 'إعادة تعيين',
+        mapNearest: 'أقرب مركز الآن',
+        urgentLabel: 'الاحتياج العاجل للدم',
+        eligLabel: 'فحص الأهلية',
+        reminderLabel: 'تذكير بموعد التبرع',
+        waLabel: 'تواصل مباشر (واتساب)',
+        faqTitle: '❓ استفسارات شائعة',
+        faq1: 'شروط التبرع الأساسية',
+        faq2: 'المدة الفاصلة بين التبرعات',
+        faq3: 'الآثار الجانبية والمخاوف'
+      },
+      en: {
+        title: 'Chat with Zomrah <span class="blood-drop">🩸</span>',
+        toggle: 'العربية',
+        welcome: 'Welcome to <strong style="color:var(--primary-red);font-weight:800;">Zomrah</strong> — start by asking about <strong>donation eligibility</strong>.',
+        welcomeTranslationBtn: 'إظهار الترجمة العربية',
+        welcomeTranslation: 'أهلاً بك في <strong style="color:#B30000;font-weight:800;">زمرة</strong> — ابدأ بسؤال عن <strong>شروط الأهلية</strong>.',
+        inputPlaceholder: 'Type your question here...',
+        sendBtn: 'Send',
+        micTitle: 'Send voice',
+        locateLabel: 'Locate me and show centers',
+        mapSearch: 'Search by hospital or district...',
+        sectorAll: 'Sector: All',
+        sectorPublic: 'Public only',
+        sectorPrivate: 'Private only',
+        mapApply: 'Apply',
+        mapReset: 'Reset',
+        mapNearest: 'Nearest center now',
+        urgentLabel: 'Urgent blood needs',
+        eligLabel: 'Eligibility check',
+        reminderLabel: 'Donation reminder',
+        waLabel: 'Contact via WhatsApp',
+        faqTitle: '❓ Common questions',
+        faq1: 'Basic donation conditions',
+        faq2: 'Interval between donations',
+        faq3: 'Side effects & concerns'
+      }
+    };
+
+    function applyLanguage(lang){
+      currentLang = lang;
+      const t = uiTexts[lang];
+
+      // html lang + dir
+      document.documentElement.lang = lang;
+      document.documentElement.dir  = (lang === 'ar') ? 'rtl' : 'ltr';
+
+      // عنوان الهيدر
+      const titleEl = document.getElementById('title-text');
+      if(titleEl){ titleEl.innerHTML = t.title; }
+
+      // زر التبديل
+      const toggle = document.getElementById('lang-toggle');
+      if(toggle){ toggle.textContent = t.toggle; }
+
+      // رسالة الترحيب (النص فقط – لا نمسّ التاريخ القديم للمحادثة)
+      const welcome = document.getElementById('welcome-message');
+      if(welcome){
+        const blocks = welcome.querySelectorAll('.translation-block');
+        // نعيد بناء داخل الرسالة (بسيط)
+        welcome.innerHTML = t.welcome +
+          '<div class="translation-block">' +
+            '<button class="toggle-btn" onclick="toggleNext(this)">'+t.welcomeTranslationBtn+'</button>' +
+            '<div class="ar-translation" style="display:none;margin-top:6px;direction:'+(lang==='ar'?'ltr':'rtl')+';text-align:'+(lang==='ar'?'left':'right')+';">'+t.welcomeTranslation+'</div>' +
+          '</div>';
+      }
+
+      // حقل الإدخال + الأزرار السفلية
+      const input = document.getElementById('user-input');
+      if(input){ input.placeholder = t.inputPlaceholder; }
+      const sendBtn = document.getElementById('send-btn');
+      if(sendBtn){ sendBtn.textContent = t.sendBtn; }
+      const micBtn = document.getElementById('mic-btn');
+      if(micBtn){ micBtn.title = t.micTitle; }
+
+      // الخريطة + الفلترة
+      const locateLabel = document.getElementById('locate-label');
+      if(locateLabel){ locateLabel.textContent = t.locateLabel; }
+
+      const mapSearch = document.getElementById('map-search');
+      if(mapSearch){ mapSearch.placeholder = t.mapSearch; }
+
+      const sectorAll = document.getElementById('sector-all');
+      const sectorPublic = document.getElementById('sector-public');
+      const sectorPrivate = document.getElementById('sector-private');
+      if(sectorAll) sectorAll.textContent = t.sectorAll;
+      if(sectorPublic) sectorPublic.textContent = t.sectorPublic;
+      if(sectorPrivate) sectorPrivate.textContent = t.sectorPrivate;
+
+      const mapApply = document.getElementById('map-apply');
+      const mapReset = document.getElementById('map-reset');
+      const mapNearest = document.getElementById('map-nearest');
+      if(mapApply) mapApply.textContent = t.mapApply;
+      if(mapReset) mapReset.textContent = t.mapReset;
+      if(mapNearest) mapNearest.textContent = t.mapNearest;
+
+      // أزرار الجنب
+      const urgentLabel = document.getElementById('urgent-label');
+      const eligLabel = document.getElementById('elig-label');
+      const reminderLabel = document.getElementById('reminder-label');
+      const waLabel = document.getElementById('wa-label');
+      if(urgentLabel) urgentLabel.textContent = t.urgentLabel;
+      if(eligLabel) eligLabel.textContent = t.eligLabel;
+      if(reminderLabel) reminderLabel.textContent = t.reminderLabel;
+      if(waLabel) waLabel.textContent = t.waLabel;
+
+      // FAQ
+      const faqTitle = document.getElementById('faq-title');
+      const faq1 = document.getElementById('faq-1');
+      const faq2 = document.getElementById('faq-2');
+      const faq3 = document.getElementById('faq-3');
+      if(faqTitle) faqTitle.textContent = t.faqTitle;
+      if(faq1) faq1.textContent = t.faq1;
+      if(faq2) faq2.textContent = t.faq2;
+      if(faq3) faq3.textContent = t.faq3;
+    }
+
+    // أول ما تفتح الصفحة
+    applyLanguage('ar');
+
+    // زر التبديل
+    document.getElementById('lang-toggle').addEventListener('click', function(){
+      const next = (currentLang === 'ar') ? 'en' : 'ar';
+      applyLanguage(next);
+    });
+
+    /* ---------------------- كودك القديم كما هو تقريباً ---------------------- */
+
     let SMTP_READY = false;
     let SENDGRID_READY = false;
     fetch('/health')
@@ -536,7 +741,7 @@
               const res = await fetch('/api/chat', {
                 method:'POST',
                 headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({ message: this.dataset.question || '', detail: true })
+                body: JSON.stringify({ message: this.dataset.question || '', detail: true, ui_lang: currentLang })
               });
               if(!res.ok) throw new Error('HTTP '+res.status);
               const j = await res.json();
@@ -783,7 +988,7 @@
         setInteractionState(false); loadingDiv = showLoading();
         var res = await fetch('/api/chat',{
           method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({message:rawMessage})
+          body: JSON.stringify({message:rawMessage, ui_lang: currentLang})
         });
         if(!res.ok) throw new Error('خطأ في الخادم: '+res.status+' '+res.statusText);
         data = await res.json();
@@ -1128,9 +1333,10 @@
       }
     });
 
-    window.sendQuickQuestion = function(q){
+    window.sendQuickQuestion = function(qAr, qEn){
       var f = document.getElementById('user-input');
-      f.value = q;
+      const textToSend = (currentLang === 'en' && qEn) ? qEn : qAr;
+      f.value = textToSend;
       document.getElementById('send-btn').click();
     };
   </script>
