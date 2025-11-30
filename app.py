@@ -230,13 +230,13 @@ def save_log(raw_query, corrected_query, response_type, kb_source, bot_response)
             pass
 
 # مهم جداً للسيرفر (Render / gunicorn):
-@app.before_first_request
-def _setup_db():
+with app.app_context():
     try:
         init_db()
-        print("✅ DB initialized (before_first_request).")
+        print("✅ DB initialized (app_context).")
     except Exception as e:
         print("⚠️ فشل تهيئة قاعدة البيانات:", e)
+
 
 # ==============================
 # 4) Base Routes
@@ -893,3 +893,4 @@ def campaigns():
 if __name__ == "__main__":
     init_db()
     app.run(host="0.0.0.0", port=5000, debug=True)
+
