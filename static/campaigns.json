@@ -1,0 +1,52 @@
+{
+  "campaigns": [
+    {
+      "id": 1,
+      "title": "حملة التبرع بالدم - مستشفى الملك فهد",
+      "short_description": "حملة لتعزيز مخزون بنك الدم في الأقسام الحرجة.",
+      "long_description": "تستهدف هذه الحملة دعم الحالات الطارئة ورفع الوعي حول أهمية التبرع بالدم، بمشاركة كادر طبي متخصص وتجهيز غرف تبرع آمنة وفق أعلى المعايير.",
+      "date": "2025-02-10",
+      "time": "09:00 - 14:00",
+      "status": "upcoming",
+      "location": "مستشفى الملك فهد العام – جدة",
+      "map_url": "https://www.google.com/maps/search/?api=1&query=King+Fahd+General+Hospital+Jeddah",
+      "register_url": "https://example.com/register-kfh",
+      "qr_url": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://example.com/register-kfh",
+      "contact": "920000000",
+      "image_url": "https://i.imgur.com/fhQqJQS.jpeg",
+      "logo_url": "https://i.imgur.com/nyG2v9C.png"
+    },
+    {
+      "id": 2,
+      "title": "حملة التبرع - جامعة جدة",
+      "short_description": "فعالية طلابية مشتركة لتعزيز الوعي وتشجيع التبرع التطوعي.",
+      "long_description": "تهدف هذه الحملة إلى نشر ثقافة التبرع بين الطلبة وإتاحة الفرصة للمجتمع الجامعي للتبرع في بيئة مهيأة بالكامل ومطابقة للمعايير الطبية.",
+      "date": "2025-02-15",
+      "time": "10:00 - 15:00",
+      "status": "ongoing",
+      "location": "جامعة جدة - المدينة الجامعية",
+      "map_url": "https://www.google.com/maps/search/?api=1&query=University+of+Jeddah",
+      "register_url": "https://example.com/register-uoj",
+      "qr_url": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://example.com/register-uoj",
+      "contact": "920020020",
+      "image_url": "https://i.imgur.com/PgbZb6X.jpeg",
+      "logo_url": "https://i.imgur.com/3yxXpIz.png"
+    },
+    {
+      "id": 3,
+      "title": "حملة التبرع بالدم - المركز الطبي الدولي",
+      "short_description": "حملة مفتوحة لدعم الحالات الحرجة ورفع الوعي الصحي.",
+      "long_description": "بالتعاون مع مختبرات المركز الطبي الدولي، تم تجهيز وحدات تبرع مجهّزة بالكامل لاستقبال أكبر عدد من المتبرعين خلال الحملة.",
+      "date": "2025-02-20",
+      "time": "08:30 - 12:30",
+      "status": "ended",
+      "location": "المركز الطبي الدولي – جدة",
+      "map_url": "https://www.google.com/maps/search/?api=1&query=IMC+Hospital+Jeddah",
+      "register_url": "https://example.com/register-imc",
+      "qr_url": "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://example.com/register-imc",
+      "contact": "920027744",
+      "image_url": "https://i.imgur.com/z7Jw8PR.jpeg",
+      "logo_url": "https://i.imgur.com/NKLZRfX.png"
+    }
+  ]
+}
