@@ -466,8 +466,9 @@
         <span class="label" id="reminder-label">تذكير بموعد التبرع</span>
       </button>
 
+      <!-- رسالة واتساب ترحيبية بالعربي + الإنجليزي -->
       <a class="sidebar-btn whatsapp" target="_blank" rel="noopener"
-         href="https://wa.me/966504635135?text=%D8%A3%D9%87%D9%84%D8%A7%D9%8B%D8%8C%20%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A7%D9%84%D8%A7%D8%B3%D8%AA%D9%81%D8%B3%D8%A7%D8%B1%20%D8%B9%D9%86%20%D8%AE%D8%AF%D9%85%D8%A9%20%D8%B2%D9%85%D8%B1%D8%A9.">
+         href="https://wa.me/966504635135?text=أهلاً،%20أود%20الاستفسار%20عن%20خدمة%20زمرة.%0AHello,%20I'd%20like%20to%20ask%20about%20the%20Zomrah%20service.">
         <i class="fab fa-whatsapp icon"></i>
         <span class="label" id="whatsapp-label">تواصل مباشر (واتساب)</span>
       </a>
@@ -478,6 +479,9 @@
           <div class="faq-item" id="faq-1" onclick="sendQuickQuestion('ما هي شروط التبرع بالدم؟')">شروط التبرع الأساسية</div>
           <div class="faq-item" id="faq-2" onclick="sendQuickQuestion('متى أقدر أتبرع مرة أخرى؟')">المدة الفاصلة بين التبرعات</div>
           <div class="faq-item" id="faq-3" onclick="sendQuickQuestion('هل التبرع بالدم مؤلم؟')">الآثار الجانبية والمخاوف</div>
+          <!-- أسئلة إضافية كما طلبتِ -->
+          <div class="faq-item" id="faq-4" onclick="sendQuickQuestion('ماذا أفعل قبل التبرع بالدم؟')">التحضير قبل التبرع</div>
+          <div class="faq-item" id="faq-5" onclick="sendQuickQuestion('هل أستطيع التبرع إذا عندي مرض مزمن؟')">التبرع مع الأمراض المزمنة</div>
         </div>
       </div>
     </div>
@@ -566,6 +570,9 @@
       const faq1 = document.getElementById('faq-1');
       const faq2 = document.getElementById('faq-2');
       const faq3 = document.getElementById('faq-3');
+      const faq4 = document.getElementById('faq-4');
+      const faq5 = document.getElementById('faq-5');
+
       if(faq1){
         faq1.textContent = CURRENT_LANG === 'ar'
           ? 'شروط التبرع الأساسية'
@@ -596,12 +603,58 @@
             : "sendQuickQuestion('Is blood donation painful?')"
         );
       }
+      if(faq4){
+        faq4.textContent = CURRENT_LANG === 'ar'
+          ? 'التحضير قبل التبرع'
+          : 'How to prepare before donation';
+        faq4.setAttribute('onclick',
+          CURRENT_LANG === 'ar'
+            ? "sendQuickQuestion('ماذا أفعل قبل التبرع بالدم؟')"
+            : "sendQuickQuestion('What should I do before donating blood?')"
+        );
+      }
+      if(faq5){
+        faq5.textContent = CURRENT_LANG === 'ar'
+          ? 'التبرع مع الأمراض المزمنة'
+          : 'Donation with chronic diseases';
+        faq5.setAttribute('onclick',
+          CURRENT_LANG === 'ar'
+            ? "sendQuickQuestion('هل أستطيع التبرع إذا عندي مرض مزمن؟')"
+            : "sendQuickQuestion('Can I donate if I have a chronic disease?')"
+        );
+      }
 
       const mapSearch = document.getElementById('map-search');
       if(mapSearch){
         mapSearch.placeholder = CURRENT_LANG === 'ar'
           ? 'ابحث باسم المستشفى أو الحي...'
           : 'Search by hospital or district...';
+      }
+
+      const sectorSelect = document.getElementById('map-sector');
+      if(sectorSelect && sectorSelect.options.length >= 3){
+        if(CURRENT_LANG === 'ar'){
+          sectorSelect.options[0].text = 'القطاع: الكل';
+          sectorSelect.options[1].text = 'حكومي فقط';
+          sectorSelect.options[2].text = 'خاص فقط';
+        }else{
+          sectorSelect.options[0].text = 'Sector: All';
+          sectorSelect.options[1].text = 'Public only';
+          sectorSelect.options[2].text = 'Private only';
+        }
+      }
+
+      const mapApply = document.getElementById('map-apply');
+      if(mapApply){
+        mapApply.textContent = CURRENT_LANG === 'ar' ? 'تطبيق' : 'Apply';
+      }
+      const mapReset = document.getElementById('map-reset');
+      if(mapReset){
+        mapReset.textContent = CURRENT_LANG === 'ar' ? 'إعادة تعيين' : 'Reset';
+      }
+      const mapNearest = document.getElementById('map-nearest');
+      if(mapNearest){
+        mapNearest.textContent = CURRENT_LANG === 'ar' ? 'أقرب مركز الآن' : 'Nearest center now';
       }
 
       // رسالة الترحيب نفسها (أول رسالة)
@@ -634,7 +687,6 @@
       }
     }
 
-    // الزر اللي فوق
     document.addEventListener('DOMContentLoaded', function(){
       const langBtn = document.getElementById('lang-toggle');
       if(langBtn){
@@ -647,7 +699,7 @@
     });
 
     // =======================
-    // باقي الكود كما هو مع تعديلات بسيطة على اللغة
+    // باقي الكود (مع تمرير CURRENT_LANG للباك-إند)
     // =======================
 
     let SMTP_READY = false;
@@ -737,7 +789,7 @@
               const res = await fetch('/api/chat', {
                 method:'POST',
                 headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({ message: this.dataset.question || '', detail: true })
+                body: JSON.stringify({ message: this.dataset.question || '', detail: true, lang: CURRENT_LANG })
               });
               if(!res.ok) throw new Error('HTTP '+res.status);
               const j = await res.json();
@@ -1066,7 +1118,7 @@
         var res = await fetch('/api/chat',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({message:rawMessage})
+          body: JSON.stringify({message:rawMessage, lang: CURRENT_LANG})
         });
         if(!res.ok) throw new Error('خطأ في الخادم: '+res.status+' '+res.statusText);
         data = await res.json();
@@ -1144,13 +1196,21 @@
         </div>
 
         <div class="elig-row">
-          <label>عملية/قلع أسنان حديثًا — كم يوم مضى؟</label>
+          <label>هل أجريت عملية/قلع أسنان مؤخرًا؟</label>
+          ${pill('proc-y','procedure','yes','نعم')}${pill('proc-n','procedure','no','لا')}
+        </div>
+        <div class="elig-row" id="procedure-days-row" style="display:none;">
+          <label>كم يوم مضى على آخر إجراء/قلع أسنان؟</label>
           <input id="recent_procedure_days" type="number" class="elig-input" min="0" max="400" placeholder="مثال: 14"/>
         </div>
 
         <div class="elig-row">
-          <label>وشم/ثقب خلال آخر كم شهر؟</label>
-          <input id="tattoo_months" type="number" class="elig-input" min="0" max="48" placeholder="مثال: 12"/>
+          <label>هل لديك وشم/ثقب خلال الفترة الأخيرة؟</label>
+          ${pill('tat-y','tattoo','yes','نعم')}${pill('tat-n','tattoo','no','لا')}
+        </div>
+        <div class="elig-row" id="tattoo-months-row" style="display:none;">
+          <label>قبل كم شهر تقريبًا كان آخر وشم/ثقب؟</label>
+          <input id="tattoo_months" type="number" class="elig-input" min="0" max="48" placeholder="مثال: 6"/>
         </div>
 
         <div class="elig-row" style="margin-top:10px;">
@@ -1205,13 +1265,21 @@
         </div>
 
         <div class="elig-row">
-          <label>Recent surgery/tooth removal – how many days?</label>
+          <label>Recent surgery / tooth removal?</label>
+          ${pill('proc-y','procedure','yes','Yes')}${pill('proc-n','procedure','no','No')}
+        </div>
+        <div class="elig-row" id="procedure-days-row" style="display:none;">
+          <label>How many days ago was the last procedure?</label>
           <input id="recent_procedure_days" type="number" class="elig-input" min="0" max="400" placeholder="e.g. 14"/>
         </div>
 
         <div class="elig-row">
-          <label>Tattoo/piercing in the last how many months?</label>
-          <input id="tattoo_months" type="number" class="elig-input" min="0" max="48" placeholder="e.g. 12"/>
+          <label>Tattoo / piercing recently?</label>
+          ${pill('tat-y','tattoo','yes','Yes')}${pill('tat-n','tattoo','no','No')}
+        </div>
+        <div class="elig-row" id="tattoo-months-row" style="display:none;">
+          <label>Roughly how many months ago?</label>
+          <input id="tattoo_months" type="number" class="elig-input" min="0" max="48" placeholder="e.g. 6"/>
         </div>
 
         <div class="elig-row" style="margin-top:10px;">
@@ -1237,6 +1305,18 @@
           const fem = document.querySelector('.only-female');
           if (fem) fem.style.display = (v === 'female') ? 'block' : 'none';
         }
+
+        if (g === 'procedure') {
+          const v = e.target.dataset.value;
+          const row = document.getElementById('procedure-days-row');
+          if (row) row.style.display = (v === 'yes') ? 'block' : 'none';
+        }
+
+        if (g === 'tattoo') {
+          const v = e.target.dataset.value;
+          const row = document.getElementById('tattoo-months-row');
+          if (row) row.style.display = (v === 'yes') ? 'block' : 'none';
+        }
       }
     });
 
@@ -1252,8 +1332,6 @@
         const age    = parseInt(document.getElementById('age')?.value || '0', 10);
         const weight = parseInt(document.getElementById('weight')?.value || '0', 10);
         const last   = parseInt(document.getElementById('last_donation_days')?.value || '9999', 10);
-        const recent = parseInt(document.getElementById('recent_procedure_days')?.value || '9999', 10);
-        const tattoo = parseInt(document.getElementById('tattoo_months')?.value || '999', 10);
 
         const getYN = (grp)=> {
           const a = document.querySelector('.pill[data-group="'+grp+'"].active');
@@ -1264,6 +1342,17 @@
         const cold  = getYN('cold');
         let pregnant = false;
         if (g === 'female') pregnant = getYN('pregnant');
+
+        const procYes = getYN('procedure');
+        const tattooYes = getYN('tattoo');
+
+        const recent = procYes
+          ? parseInt(document.getElementById('recent_procedure_days')?.value || '0', 10)
+          : 9999; // لا يوجد إجراء حديث
+
+        const tattoo = tattooYes
+          ? parseInt(document.getElementById('tattoo_months')?.value || '0', 10)
+          : 999; // لا يوجد وشم خلال فترة قريبة
 
         const payload = {
           age, weight, last_donation_days:last,
@@ -1305,7 +1394,7 @@
           if (reasons.length){
             html += '<ul style="margin:8px 16px 0 0">';
             reasons.forEach(rsn=>{
-              html += '<li>'+ rsn +'</li>'; // ملاحظة: الأسباب نفسها من الباك-إند بالعربي
+              html += '<li>'+ rsn +'</li>'; // الأسباب من الباك-إند بالعربي
             });
             html += '</ul>';
           } else {
@@ -1405,7 +1494,7 @@
       cb.scrollTop = cb.scrollHeight;
 
       try{
-        const res = await fetch('/api/urgent_needs');
+        const res = await fetch('/api/urgent_needs?lang='+CURRENT_LANG);
         if(!res.ok) throw new Error('HTTP '+res.status);
         const j = await res.json();
         cb.removeChild(loading);
@@ -1417,25 +1506,27 @@
             ? 'الاحتياج العاجل للدم (جدة وما حولها)'
             : 'Urgent blood needs (Jeddah & nearby)'
         }</div>`;
-        if(j.answer_ar){
-          html += `<div class="inline-note" style="margin-bottom:8px;">${j.answer_ar}</div>`;
+
+        const note = (CURRENT_LANG === 'ar') ? (j.answer_ar || '') : (j.answer_en || j.answer_ar || '');
+        if(note){
+          html += `<div class="inline-note" style="margin-bottom:8px;">${note}</div>`;
         }
         html += `<div class="urgent-wrapper">`;
 
         (j.needs || []).forEach(n=>{
           const status = (n.status || '').trim();
           let cls = 'normal';
-          if (/عاجل|طارئ|مرتفع جداً/i.test(status)) cls = 'critical';
-          else if (/مرتفع|متوسط/i.test(status)) cls = 'high';
+          if (/عاجل|طارئ|مرتفع جداً|critical|urgent/i.test(status)) cls = 'critical';
+          else if (/مرتفع|متوسط|high/i.test(status)) cls = 'high';
 
-          const titlePrefix = (CURRENT_LANG === 'ar') ? '🏥 ' : '🏥 ';
+          const titlePrefix = '🏥 ';
           const navBtnLabel = (CURRENT_LANG === 'ar')
             ? 'التوجيه على الخرائط'
             : 'Open in Maps';
 
           html += `
             <div class="urgent-card ${cls}" data-url="${n.location_url || ''}">
-              <div class="title">${titlePrefix}${n.hospital || 'مستشفى غير معروف'}</div>
+              <div class="title">${titlePrefix}${n.hospital || (CURRENT_LANG === 'ar' ? 'مستشفى غير معروف' : 'Unknown hospital')}</div>
               <div class="badge">${n.status || (CURRENT_LANG === 'ar' ? 'حالة غير محددة' : 'Unspecified status')}</div>
               <div>🔍 ${n.details || (CURRENT_LANG === 'ar' ? 'تفاصيل غير مذكورة' : 'No details provided')}</div>
               ${n.location_url ? `<div style="margin-top:6px;"><button class="go-map-btn" type="button">${navBtnLabel}</button></div>` : ''}
