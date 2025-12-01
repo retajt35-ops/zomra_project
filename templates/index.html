@@ -1133,12 +1133,23 @@
         removeLoading(loadingDiv); setInteractionState(true);
       }
 
-      if(data){
-        var finalUserMessage = data.corrected_message || rawMessage;
-        displayMessage(finalUserMessage, 'user');
-        displayAnswerWithControls(data.answer || '', finalUserMessage);
-        if (isLocationIntent(rawMessage)) { openNearestAuto(); }
-      }
+     if (data) {
+  // دائماً نعرض ما كتبه المستخدم بدون تعديل
+  var finalUserMessage = rawMessage;
+
+  // إذا كانت الواجهة عربية و الباك صلح السؤال → نعرض النسخة المصحّحة
+  if (CURRENT_LANG === 'ar' && data.corrected_message) {
+    finalUserMessage = data.corrected_message;
+  }
+
+  displayMessage(finalUserMessage, 'user');
+  displayAnswerWithControls(data.answer || '', finalUserMessage);
+
+  if (isLocationIntent(rawMessage)) {
+    openNearestAuto();
+  }
+}
+
     });
 
     function pill(id, group, value, label){
