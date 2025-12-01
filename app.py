@@ -34,16 +34,16 @@ import requests
 # ==============================
 load_dotenv(override=True)
 
-BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
-OPENAI_API_KEY    = (os.getenv("OPENAI_API_KEY") or "").strip().strip('"').strip("'")
-OPENAI_MODEL      = (os.getenv("OPENAI_MODEL") or "gpt-4o-mini").strip()
+OPENAI_API_KEY   = (os.getenv("OPENAI_API_KEY") or "").strip().strip('"').strip("'")
+OPENAI_MODEL     = (os.getenv("OPENAI_MODEL") or "gpt-4o-mini").strip()
 FORCE_AI_FALLBACK = (os.getenv("FORCE_AI_FALLBACK") or "false").lower() in {"1", "true", "yes"}
 
 # مهم: افتراضيًا استخدم الملفات داخل static حتى لو ما ضبطتي المتغيرات في Render
-URGENT_SHEET_URL   = (os.getenv("URGENT_NEEDS_SHEET_CSV") or "").strip()
-URGENT_JSON_PATH   = "static/urgent_needs.json"
+URGENT_SHEET_URL    = (os.getenv("URGENT_NEEDS_SHEET_CSV") or "").strip()
+URGENT_JSON_PATH = "static/urgent_needs.json"
 CAMPAIGNS_JSON_PATH = "static/campaigns.json"
 
 # SMTP (اختياري - للمحلي تقريباً)
@@ -76,9 +76,7 @@ if OPENAI_API_KEY:
 # ==============================
 # 2) Arabic / Text utils
 # ==============================
-_ARABIC_DIACRITICS_RE = re.compile(
-    r"[\u0617-\u061A\u064B-\u0652\u0670\u0653-\u065F\u06D6-\u06ED]"
-)
+_ARABIC_DIACRITICS_RE = re.compile(r"[\u0617-\u061A\u064B-\u0652\u0670\u0653-\u065F\u06D6-\u06ED]")
 
 def normalize_arabic(text: str) -> str:
     """إزالة التشكيل وتوحيد بعض الحروف لتسهيل البحث بالتقريب."""
@@ -118,7 +116,9 @@ def openai_translate(text: str, target_language_code: str) -> str:
         return text
     try:
         if target_language_code == "ar":
-            prompt = f"ترجم النص التالي إلى العربية الفصحى. أعد الترجمة فقط:\n\n{text}"
+            prompt = f"Translate to standard Arabic. Return only the translation:\n\n{text}"
+        elif target_language_code == "en":
+            prompt = f"Translate the following text to English. Return only the translation:\n\n{text}"
         else:
             prompt = (
                 f"Translate the following Arabic text to {target_language_code}. "
@@ -129,21 +129,26 @@ def openai_translate(text: str, target_language_code: str) -> str:
             messages=[{"role": "user", "content": prompt}],
         )
         out = (resp.choices[0].message.content or "").strip()
+        # إزالة أي مقدمة مثل: "الترجمة:"
         return out.split(":", 1)[-1].strip() if ":" in out[:15] else out
     except Exception as e:
         print("⚠️ ترجمة:", e)
         return text
+
+def translate_field_for_lang(text: str, lang: str) -> str:
+    """ترجمة حقل واحد إذا كانت اللغة المطلوبة ليست العربية."""
+    if not text:
+        return text
+    if lang == "ar":
+        return text
+    return openai_translate(text, lang)
 
 def openai_correct(text: str) -> str:
     """تصحيح الإملاء العربي باستخدام OpenAI إن توفر."""
     if not client or not text:
         return text
     try:
-        prompt = (
-            "صحّح الأخطاء الإملائية في النص العربي التالي وأعد النص المصحح فقط، "
-            "دون أي شرح إضافي:\n\n"
-            f"{text}"
-        )
+        prompt = f"صحّح الأخطاء الإملائية في النص العربي التالي وأعد النص المصحح فقط:\n\n{text}"
         resp = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[{"role": "user", "content": prompt}],
@@ -154,15 +159,10 @@ def openai_correct(text: str) -> str:
         print("⚠️ تصحيح:", e)
         return text
 
-# ملاحظة أسفل كل رد (ستدخل في النص ثم تُترجم بالكامل عند الحاجة)
-FOOTER_NOTE_AR = (
+# فوتر موحّد
+BASE_FOOTER = (
     "مُولَّد آليًا • قد يحتوي على أخطاء طفيفة\n"
     "مع تحياتي زمرة 🩸"
-)
-
-FOOTER_NOTE_EN = (
-    "AI-generated • May contain minor errors\n"
-    "With love, Zomra 🩸"
 )
 
 # ==============================
@@ -246,6 +246,7 @@ with app.app_context():
     except Exception as e:
         print("⚠️ فشل تهيئة قاعدة البيانات:", e)
 
+
 # ==============================
 # 4) Base Routes
 # ==============================
@@ -300,15 +301,15 @@ def load_knowledge_base(path: str = "knowledge_base.json"):
     print("ℹ️ سيتم استخدام قاعدة معرفية افتراضية بسيطة.")
     return {
         "ما هي شروط التبرع بالدم؟": {
-            "answer": "يجب أن يكون العمر بين 18 و60 عاماً، والوزن 50 كجم أو أكثر، مع صحة جيدة وبدون أمراض معدية. يفضّل مراجعة المستشفى قبل التبرع.",
+            "answer": "يجب أن يكون العمر 18-60 عاماً والوزن ≥50 كجم وبصحة جيدة وبدون أمراض معدية. يفضّل مراجعة المستشفى قبل التبرع.",
             "source": "وزارة الصحة السعودية",
         },
-        "متى أقدر أتبرع مرة أخرى؟": {
-            "answer": "التبرع الكامل بالدم عادةً يحتاج 90 يومًا على الأقل بين كل تبرعين. بعض مكوّنات الدم قد تختلف.",
+        "المدة الفاصلة بين التبرعات؟": {
+            "answer": "التبرع الكامل: 90 يومًا على الأقل بين كل تبرعين. مكوّنات الدم قد تختلف.",
             "source": "وزارة الصحة السعودية",
         },
         "هل التبرع بالدم مؤلم؟": {
-            "answer": "وخزة الإبرة سريعة وخفيفة عادةً، وسحب الدم يستغرق بضع دقائق، مع راحة بسيطة بعد التبرع.",
+            "answer": "وخزة الإبرة سريعة وخفيفة عادةً، والسحب نفسه يستغرق دقائق، مع راحة بسيطة بعد التبرع.",
             "source": "وزارة الصحة السعودية",
         },
     }
@@ -320,7 +321,7 @@ def search_knowledge_base(corrected_query: str) -> Tuple[str, str]:
     if not corrected_query:
         return None, None
 
-    nq   = normalize_arabic(corrected_query)
+    nq = normalize_arabic(corrected_query)
     keys = list(KNOWLEDGE_BASE.keys())
     norm = {k: normalize_arabic(k) for k in keys}
     vals = list(norm.values())
@@ -328,70 +329,72 @@ def search_knowledge_base(corrected_query: str) -> Tuple[str, str]:
     best = process.extractOne(nq, vals, scorer=fuzz.partial_ratio)
     if best and best[1] >= 85:
         orig = [k for k, v in norm.items() if v == best[0]][0]
-        d    = KNOWLEDGE_BASE[orig]
+        d = KNOWLEDGE_BASE[orig]
         return d["answer"], d.get("source")
 
     best = process.extractOne(nq, vals, scorer=fuzz.token_sort_ratio)
     if best and best[1] >= 80:
         orig = [k for k, v in norm.items() if v == best[0]][0]
-        d    = KNOWLEDGE_BASE[orig]
+        d = KNOWLEDGE_BASE[orig]
         return d["answer"], d.get("source")
 
     return None, None
 
 # ==============================
-# 6) Chat Endpoint (مع دعم اللغة)
+# 6) Chat Endpoint
 # ==============================
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.json or {}
-    raw  = data.get("message") or ""
+    raw = data.get("message") or ""
     user_message = raw.strip()
-    want_detail  = bool(data.get("detail"))
+    want_detail = bool(data.get("detail"))
+
+    # لغة الواجهة من الفرونت (ar / en)
+    ui_lang = (data.get("lang") or "").lower()
+    if ui_lang not in ("ar", "en"):
+        ui_lang = None
 
     if not user_message:
+        msg = "الرجاء كتابة سؤالك." if ui_lang in (None, "ar") else "Please type your question."
         return jsonify(
-            {"answer": "الرجاء كتابة سؤالك.", "source_type": "Error", "source_text": None}
+            {"answer": msg, "source_type": "Error", "source_text": None}
         ), 200
 
-    # لغة الواجهة (من الفرونت) أو نكتشفها
-    ui_lang = (data.get("lang") or "").lower().strip()
-    if not ui_lang:
-        ui_lang = "ar"
-        try:
-            detected = detect(user_message)
-            if detected.startswith("en"):
-                ui_lang = "en"
-            elif detected.startswith("ar"):
-                ui_lang = "ar"
-        except LangDetectException:
-            ui_lang = "ar"
+    # كشف لغة النص فقط لأجل الترجمة الداخلية
+    detected_lang = "ar"
+    try:
+        detected_lang = detect(user_message)
+    except LangDetectException:
+        pass
 
-    # نعمل داخلياً بالعربي، ثم نترجم النتيجة إلى ui_lang في النهاية
-    if ui_lang == "ar" or not client:
+    # اللغة المستهدفة للرد (نفضّل لغة الواجهة, ثم اللغة المكتشفة)
+    target_lang = ui_lang or detected_lang or "ar"
+    if target_lang not in ("ar", "en"):
+        target_lang = "ar"
+
+    # تحويل السؤال للعربية للبحث في القاعدة المعرفية
+    if detected_lang == "ar" or not client:
         query = user_message
     else:
-        # سؤال المستخدم بلغة أخرى → نترجمه للعربي أولاً
         query = openai_translate(user_message, "ar")
 
     corrected = openai_correct(query) or query
 
     answer, source_text = search_knowledge_base(corrected)
-    source_type = "KB"
-    final_ar = ""
+    source_type = None
 
     if answer:
-        # من القاعدة المعرفية
-        src_label = source_text or "قاعدة المعرفة (وزارة الصحة أو مرجع طبي موثوق)"
-        core      = answer if want_detail else summarize_and_simplify(answer, 250)
-        final_ar  = (
-            f"المصدر الأساسي للمعلومة: {src_label}\n\n"
-            f"{core}\n\n"
-            f"{FOOTER_NOTE_AR}"
-        )
         source_type = "KB"
+        core_ar = answer if want_detail else summarize_and_simplify(answer, 250)
+        src_label = source_text or "مرجع طبي موثوق"
+        final_ar = (
+            f"مصدر المعلومة الأساسي: {src_label}\n\n"
+            f"{core_ar}\n\n"
+            f"{BASE_FOOTER}"
+        )
     else:
-        # لا توجد إجابة في القاعدة → نستخدم النموذج (ونسميه في النص Gemini كما طلبتي)
+        # لا توجد إجابة في القاعدة المعرفية
         if client and not FORCE_AI_FALLBACK:
             try:
                 res = client.chat.completions.create(
@@ -401,54 +404,44 @@ def chat():
                             "role": "user",
                             "content": (
                                 "أنت مساعد طبي يجيب عن أسئلة التبرع بالدم "
-                                "وفق إرشادات وزارة الصحة السعودية قدر الإمكان. "
-                                "إذا لم تكن متأكدًا فاذكر أن المعلومة تقريبية واطلب مراجعة الطبيب.\n\n"
-                                f"سؤال المستخدم (بالعربية):\n{corrected}"
+                                "وفق إرشادات وزارة الصحة السعودية فقط. "
+                                "إن لم تكن متأكداً، اعتذر واطلب من المستخدم مراجعة الطبيب.\n\n"
+                                f"سؤال المستخدم:\n{corrected}"
                             ),
                         }
                     ],
                 )
-                ai_text = (res.choices[0].message.content or "").strip()
-                summed  = ai_text if want_detail else summarize_and_simplify(ai_text, 250)
-
+                ai_text_ar = (res.choices[0].message.content or "").strip()
+                core_ar = ai_text_ar if want_detail else summarize_and_simplify(ai_text_ar, 250)
                 source_type = "AI"
-                source_text = "مراجع طبية موثوقة (مثل وزارة الصحة أو مراكز طبية معتمدة)"
-
+                # نُعرّف مصدرًا عامًّا للذكاء الاصطناعي
+                source_text = "إرشادات وزارة الصحة السعودية ومراجع طبية موثوقة"
                 final_ar = (
                     "لم نعثر على إجابة في قاعدة المعرفة؛ استعنا بـ Gemini لصياغة الرد التالي:\n\n"
-                    f"{summed}\n\n"
-                    f"المصدر الأساسي للمعلومة: {source_text}\n\n"
-                    f"{FOOTER_NOTE_AR}"
+                    f"{core_ar}\n\n"
+                    f"مصدر المعلومة الأساسي: {source_text}\n\n"
+                    f"{BASE_FOOTER}"
                 )
             except Exception as e:
                 final = f"عذرًا، حدثت مشكلة في الاتصال بالذكاء الاصطناعي: {e}"
                 save_log(user_message, corrected, "Error", None, final)
                 return jsonify(
-                    {
-                        "answer": final,
-                        "source_type": "Error",
-                        "source_text": None,
-                        "corrected_message": corrected,
-                    }
+                    {"answer": final, "source_type": "Error", "corrected_message": corrected}
                 ), 500
         else:
             source_type = "KB-Only"
-            source_text = None
             final_ar = (
                 "عذرًا، لا توجد إجابة محددة في قاعدة المعرفة حاليًا، "
-                "والذكاء الاصطناعي غير مفعّل على الخادم.\n\n"
-                f"{FOOTER_NOTE_AR}"
+                "والذكاء الاصطناعي غير مفعّل.\n\n"
+                f"{BASE_FOOTER}"
             )
 
-    # الآن نجهز النص النهائي حسب لغة الواجهة
+    # ترجمة الرد النهائي حسب لغة الواجهة (أو المكتشفة)
     final = final_ar
-    if ui_lang != "ar" and client:
-        # نترجم النص الكامل (العربي) إلى لغة المستخدم
-        final = openai_translate(final_ar, ui_lang)
+    if target_lang != "ar" and client:
+        final = openai_translate(final_ar, target_lang)
 
-    # نحفظ اللوق
     save_log(user_message, corrected, source_type, source_text, final)
-
     return jsonify(
         {
             "answer": final,
@@ -459,7 +452,7 @@ def chat():
     ), 200
 
 # ==============================
-# 7) Urgent Needs (عربي / إنجليزي)
+# 7) Urgent Needs
 # ==============================
 def gmaps_place_link(name: str) -> str:
     import urllib.parse as up
@@ -484,13 +477,7 @@ def _load_json(path: str):
         print("⚠️ JSON:", e)
     return None
 
-def _format_urgent_rows(rows):
-    """
-    يحوّل صفوف CSV/JSON إلى شكل موحّد:
-    [
-      { "hospital": "...", "status": "...", "details": "...", "location_url": "..." }
-    ]
-    """
+def _format_urgent_rows(rows, lang: str = "ar"):
     out = []
     for r in rows or []:
         hospital = (
@@ -514,129 +501,83 @@ def _format_urgent_rows(rows):
         )
         if hospital and not loc:
             loc = gmaps_place_link(hospital)
+
         if hospital:
+            # ترجمة الحقول لو اللغة المطلوبة إنجليزية
+            if lang == "en":
+                hospital_t = translate_field_for_lang(hospital, "en")
+                status_t   = translate_field_for_lang(status or "", "en")
+                details_t  = translate_field_for_lang(details or "", "en")
+            else:
+                hospital_t, status_t, details_t = hospital, status, details
+
             out.append(
                 {
-                    "hospital": hospital,
-                    "status": status,
-                    "details": details,
+                    "hospital": hospital_t,
+                    "status": status_t,
+                    "details": details_t,
                     "location_url": loc,
                 }
             )
     return out
 
-# fallback فيه اسماء عربية وإنجليزية
 FALLBACK_URGENT = [
     {
-        "hospital_ar": "مستشفى الملك فهد العام بجدة",
-        "hospital_en": "King Fahd General Hospital, Jeddah",
-        "status_ar": "عاجل",
-        "status_en": "Critical",
-        "details_ar": "حاجة ماسة لفصيلة +O لحالات طارئة.",
-        "details_en": "Urgent need for O+ for emergency cases.",
+        "hospital": "مستشفى الملك فهد العام بجدة",
+        "status": "عاجل",
+        "details": "+O لحالات طارئة",
         "location_url": gmaps_place_link("King Fahd General Hospital Jeddah"),
     },
     {
-        "hospital_ar": "بنك الدم الإقليمي – جدة",
-        "hospital_en": "Jeddah Regional Blood Bank",
-        "status_ar": "مرتفع جداً",
-        "status_en": "Very High",
-        "details_ar": "نقص حاد في صفائح B- لمرضى الأورام.",
-        "details_en": "Severe shortage of B- platelets for oncology patients.",
+        "hospital": "بنك الدم الإقليمي – جدة",
+        "status": "مرتفع جداً",
+        "details": "نقص صفائح B-",
         "location_url": gmaps_place_link("Jeddah Regional Laboratory and Blood Bank"),
     },
     {
-        "hospital_ar": "مستشفى شرق جدة",
-        "hospital_en": "East Jeddah Hospital",
-        "status_ar": "عاجل",
-        "status_en": "Critical",
-        "details_ar": "حالات طوارئ تحتاج لفصيلة A-.",
-        "details_en": "Emergency cases requiring A- blood.",
+        "hospital": "مستشفى شرق جدة",
+        "status": "عاجل",
+        "details": "A- لحالات طوارئ",
         "location_url": gmaps_place_link("East Jeddah Hospital Blood Bank"),
     },
 ]
 
 @app.route("/api/urgent_needs")
 def urgent_needs():
-    """
-    جلب قائمة الاحتياج العاجل من Google Sheet أو JSON أو fallback.
-    تدعم ?lang=ar أو ?lang=en
-    """
-    ui_lang = (request.args.get("lang") or "ar").lower().strip()
-    if ui_lang not in ("ar", "en"):
-        ui_lang = "ar"
+    """جلب قائمة الاحتياج العاجل من Google Sheet أو JSON أو fallback."""
+    lang = (request.args.get("lang") or "ar").lower()
+    if lang not in ("ar", "en"):
+        lang = "ar"
 
     needs = None
 
-    # 1) من Google Sheet (CSV) إن وجد
     if URGENT_SHEET_URL:
         rows = _fetch_csv(URGENT_SHEET_URL)
         if rows:
-            needs = _format_urgent_rows(rows)
+            needs = _format_urgent_rows(rows, lang=lang)
 
-    # 2) من JSON داخل static إن وجد
     if not needs:
         js = _load_json(URGENT_JSON_PATH)
         if isinstance(js, dict) and isinstance(js.get("needs"), list):
-            needs = _format_urgent_rows(js["needs"])
+            needs = _format_urgent_rows(js["needs"], lang=lang)
         elif isinstance(js, list):
-            needs = _format_urgent_rows(js)
+            needs = _format_urgent_rows(js, lang=lang)
 
-    # 3) fallback ثابت
     if not needs:
-        # هنا سنستخدم البنية الثنائية اللغة
-        raw_needs = FALLBACK_URGENT
-        out = []
-        for n in raw_needs:
-            if ui_lang == "ar":
-                out.append(
-                    {
-                        "hospital": n.get("hospital_ar") or n.get("hospital_en") or "",
-                        "status": n.get("status_ar") or n.get("status_en") or "",
-                        "details": n.get("details_ar") or n.get("details_en") or "",
-                        "location_url": n.get("location_url", ""),
-                    }
-                )
-            else:
-                out.append(
-                    {
-                        "hospital": n.get("hospital_en") or n.get("hospital_ar") or "",
-                        "status": n.get("status_en") or n.get("status_ar") or "",
-                        "details": n.get("details_en") or n.get("details_ar") or "",
-                        "location_url": n.get("location_url", ""),
-                    }
-                )
-        needs = out
+        needs = _format_urgent_rows(FALLBACK_URGENT, lang=lang)
+
+    # نص عربي ثابت + ترجمة إنجليزية إن توفّر
+    base_text_ar = "احتياجات عاجلة (يرجى الاتصال قبل الزيارة)."
+    base_text_en = "Urgent needs (please call the hospital before visiting)."
+    if lang == "en" and client:
+        # لو حابة ممكن نترجم النص العربي، لكن هنا استخدمنا جملة جاهزة
+        answer_en = base_text_en
     else:
-        # لو البيانات من Sheet/JSON وعندنا client وتبي انجليزي نترجم سريعا
-        if ui_lang == "en" and client:
-            out = []
-            for n in needs:
-                hosp    = n.get("hospital", "")
-                status  = n.get("status", "")
-                details = n.get("details", "")
-                hosp_en    = openai_translate(hosp, "en") if hosp else hosp
-                status_en  = openai_translate(status, "en") if status else status
-                details_en = openai_translate(details, "en") if details else details
-                out.append(
-                    {
-                        "hospital": hosp_en,
-                        "status": status_en,
-                        "details": details_en,
-                        "location_url": n.get("location_url", ""),
-                    }
-                )
-            needs = out
-
-    answer_ar = "احتياجات عاجلة للدم (يرجى الاتصال بالمستشفى قبل الزيارة)."
-    answer_en = "Urgent blood needs (please call the hospital before visiting)."
-
-    answer = answer_ar if ui_lang == "ar" else answer_en
+        answer_en = base_text_en
 
     return jsonify(
         {
-            "answer": answer,
-            "answer_ar": answer_ar,
+            "answer_ar": base_text_ar,
             "answer_en": answer_en,
             "source": "Sheet/JSON/Fallback",
             "needs": needs,
@@ -645,79 +586,48 @@ def urgent_needs():
     ), 200
 
 # ==============================
-# 8) Eligibility (فحص الأهلية) مع نص عربي/إنجليزي
+# 8) Eligibility (فحص الأهلية)
 # ==============================
 ELIGIBILITY_QUESTIONS = [
-    {
-        "id": "gender",
-        "text_ar": "ما هو جنسك؟",
-        "text_en": "What is your gender?",
-        "type": "choice",
-        "options_ar": ["ذكر", "أنثى"],
-        "options_en": ["Male", "Female"],
-    },
-    {
-        "id": "age",
-        "text_ar": "كم عمرك؟",
-        "text_en": "How old are you?",
-        "type": "number",
-        "min": 1,
-        "max": 100,
-    },
-    {
-        "id": "weight",
-        "text_ar": "كم وزنك بالكيلو؟",
-        "text_en": "What is your weight in kg?",
-        "type": "number",
-        "min": 30,
-        "max": 300,
-    },
+    {"id": "age", "text": "كم عمرك؟", "type": "number", "min": 1, "max": 100},
+    {"id": "weight", "text": "كم وزنك بالكيلو؟", "type": "number", "min": 30, "max": 300},
     {
         "id": "last_donation_days",
-        "text_ar": "متى كان آخر تبرع لك؟ (بالأيام)",
-        "text_en": "When was your last blood donation? (in days)",
+        "text": "متى كان آخر تبرع لك؟ (بالأيام)",
         "type": "number",
         "min": 0,
         "max": 2000,
     },
     {
         "id": "on_anticoagulants",
-        "text_ar": "هل تتناول أدوية سيولة الدم حالياً؟",
-        "text_en": "Are you currently taking blood thinners (anticoagulants)?",
+        "text": "هل تتناول أدوية سيولة الدم حالياً؟",
         "type": "boolean",
     },
     {
         "id": "on_antibiotics",
-        "text_ar": "هل تتناول مضادًا حيويًا لعدوى نشطة؟",
-        "text_en": "Are you taking antibiotics for an active infection?",
+        "text": "هل تتناول مضادًا حيويًا لعدوى نشطة؟",
         "type": "boolean",
     },
     {
         "id": "has_cold",
-        "text_ar": "هل لديك حالياً أعراض زكام أو حمى؟",
-        "text_en": "Do you currently have cold or fever symptoms?",
+        "text": "هل لديك أعراض زكام/حمى حالياً؟",
         "type": "boolean",
     },
     {
         "id": "pregnant",
-        "text_ar": "هل أنتِ حامل حاليًا؟ (للنساء)",
-        "text_en": "Are you currently pregnant? (for women)",
+        "text": "هل أنتِ حامل حاليًا؟ (للنساء)",
         "type": "boolean",
     },
     {
-        # حسب طلبك: نعم/لا ثم في الواجهة نسأل عن عدد الأيام إذا نعم
         "id": "recent_procedure_days",
-        "text_ar": "هل أجريت عملية أو قلع أسنان مؤخرًا؟ (في الواجهة: نعم/لا ثم عدد الأيام)",
-        "text_en": "Have you recently had surgery or tooth extraction? (UI: Yes/No then days)",
+        "text": "هل أجريت عملية أو قلع أسنان مؤخرًا؟ كم يوم مضى؟",
         "type": "number",
         "min": 0,
         "max": 400,
     },
     {
-        # حسب طلبك: نعم/لا ثم في الواجهة نسأل عن عدد الأشهر إذا نعم
         "id": "tattoo_months",
-        "text_ar": "هل عملت وشم/ثقب خلال الفترة الأخيرة؟ (في الواجهة: نعم/لا ثم عدد الأشهر)",
-        "text_en": "Have you had a tattoo/piercing recently? (UI: Yes/No then months)",
+        "text": "هل عملت وشم/ثقب خلال آخر كم شهر؟",
         "type": "number",
         "min": 0,
         "max": 48,
@@ -726,38 +636,21 @@ ELIGIBILITY_QUESTIONS = [
 
 @app.route("/api/eligibility/questions")
 def eligibility_questions():
-    """
-    يعيد الأسئلة مع نص عربي وإنجليزي.
-    يدعم ?lang=ar أو ?lang=en لحقول text المختصرة.
-    """
-    ui_lang = (request.args.get("lang") or "ar").lower().strip()
-    if ui_lang not in ("ar", "en"):
-        ui_lang = "ar"
-
-    out = []
-    for q in ELIGIBILITY_QUESTIONS:
-        base = dict(q)
-        if ui_lang == "ar":
-            base["text"] = q.get("text_ar") or q.get("text_en") or ""
-        else:
-            base["text"] = q.get("text_en") or q.get("text_ar") or ""
-        out.append(base)
-
-    return jsonify({"questions": out})
+    return jsonify({"questions": ELIGIBILITY_QUESTIONS})
 
 def evaluate_eligibility(payload: dict):
-    reasons  = []
+    reasons = []
     eligible = True
     next_date = None
 
-    age    = int(payload.get("age", 0) or 0)
+    age = int(payload.get("age", 0) or 0)
     weight = int(payload.get("weight", 0) or 0)
-    last   = int(payload.get("last_donation_days", 9999) or 9999)
-    on_ac  = bool(payload.get("on_anticoagulants", False))
-    on_ab  = bool(payload.get("on_antibiotics", False))
-    cold   = bool(payload.get("has_cold", False))
-    preg   = bool(payload.get("pregnant", False))
-    proc   = int(payload.get("recent_procedure_days", 9999) or 9999)
+    last = int(payload.get("last_donation_days", 9999) or 9999)
+    on_ac = bool(payload.get("on_anticoagulants", False))
+    on_ab = bool(payload.get("on_antibiotics", False))
+    cold = bool(payload.get("has_cold", False))
+    preg = bool(payload.get("pregnant", False))
+    proc = int(payload.get("recent_procedure_days", 9999) or 9999)
     tattoo = int(payload.get("tattoo_months", 999) or 999)
 
     if age < 18:
@@ -772,27 +665,27 @@ def evaluate_eligibility(payload: dict):
         days_left = 90 - last
         next_date = (datetime.now() + timedelta(days=days_left)).strftime("%Y-%m-%d")
         reasons.append(
-            f"لم يمضِ 90 يومًا منذ آخر تبرع. يمكن التبرع بعد {days_left} يومًا (تاريخ مقترح: {next_date})."
+            f"لم يمض 90 يومًا منذ آخر تبرع. متاح بعد {days_left} يومًا ({next_date})."
         )
 
     if on_ac:
         eligible = False
-        reasons.append("أدوية السيولة (مميّعات الدم) تمنع التبرع حاليًا.")
+        reasons.append("أدوية السيولة تمنع التبرع حاليًا.")
     if on_ab:
         eligible = False
-        reasons.append("يفضّل تأجيل التبرع 7 أيام بعد آخر جرعة من المضاد الحيوي.")
+        reasons.append("أجّل التبرع 7 أيام بعد آخر جرعة مضاد حيوي.")
     if cold:
         eligible = False
-        reasons.append("وجود أعراض زكام أو حمى يستدعي تأجيل التبرع حتى التعافي.")
+        reasons.append("أعراض زكام/حمى: أجّل حتى التعافي.")
     if preg:
         eligible = False
-        reasons.append("الحمل يمنع التبرع. يمكن استئناف التبرع بعد 6 أسابيع من الولادة أو الإجهاض.")
+        reasons.append("الحمل يمنع التبرع. يُستأنف بعد 6 أسابيع من الولادة/الإجهاض.")
     if proc < 7:
         eligible = False
-        reasons.append("إجراء جراحي/قلع أسنان حديث: انتظر 7 أيام على الأقل قبل التبرع.")
+        reasons.append("إجراء/قلع أسنان حديث: انتظر 7 أيام على الأقل.")
     if tattoo < 6:
         eligible = False
-        reasons.append("وشم/ثقب خلال آخر 6 أشهر: يجب تأجيل التبرع حتى مرور 6 أشهر.")
+        reasons.append("وشم/ثقب خلال آخر 6 أشهر: يؤجل التبرع.")
 
     if not next_date:
         next_date = (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d")
@@ -849,7 +742,6 @@ END:VCALENDAR"""
 def try_send_email(
     to_email: str, subject: str, body: str, ics_bytes: bytes, ics_name: str
 ) -> Tuple[bool, str]:
-    # أولاً نحاول SendGrid
     if SENDGRID_READY:
         try:
             url = "https://api.sendgrid.com/v3/mail/send"
@@ -888,7 +780,6 @@ def try_send_email(
         except Exception as e:
             return False, f"SendGrid exception: {e}"
 
-    # إن لم يكن SendGrid جاهز نستخدم SMTP (إن توفر)
     if not SMTP_READY:
         return False, "SMTP غير مفعّل في الخادم."
 
@@ -920,18 +811,16 @@ def try_send_email(
 
 @app.route("/api/reminder", methods=["POST"])
 def reminder():
-    data      = request.json or {}
+    data = request.json or {}
     user_hint = (data.get("user_hint") or "متبرع").strip()
-    email     = (data.get("email") or "").strip()
+    email = (data.get("email") or "").strip()
     next_date = (datetime.now() + timedelta(days=90)).strftime("%Y-%m-%d")
 
-    # نحفظ التذكير في قاعدة البيانات
     try:
         conn = sqlite3.connect(DB_NAME)
-        c    = conn.cursor()
+        c = conn.cursor()
         c.execute(
-            "INSERT INTO reminders(created_at,user_hint,email,next_date,note) "
-            "VALUES(?,?,?,?,?)",
+            "INSERT INTO reminders(created_at,user_hint,email,next_date,note) VALUES(?,?,?,?,?)",
             (
                 datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                 user_hint,
@@ -1001,18 +890,17 @@ def upload_audio():
     if "audio_file" not in request.files:
         return jsonify({"error": "لم يتم إرسال ملف صوتي"}), 400
 
-    # في النسخة الحالية: نعتبر أن الصوت يحتوي سؤالاً بسيطاً معروفاً
-    text      = "ما هي شروط التبرع بالدم؟"
+    text = "ما هي شروط التبرع بالدم؟"
     corrected = openai_correct(text) or text
     answer, src = search_knowledge_base(corrected)
 
     if answer:
         final = summarize_and_simplify(answer, 250)
-        st    = "KB (من الصوت)"
+        st = "KB (من الصوت)"
     else:
-        final = "تم تحويل الصوت؛ لا توجد إجابة محددة في القاعدة المعرفية."
-        st    = "Error (من الصوت)"
-        src   = None
+        final = "تم تحويل الصوت؛ لا إجابة محددة في القاعدة المعرفية."
+        st = "Error (من الصوت)"
+        src = None
 
     save_log("ملف صوتي", corrected, st, src, final)
 
@@ -1033,7 +921,7 @@ def upload_audio():
 def stats():
     try:
         conn = sqlite3.connect(DB_NAME)
-        c    = conn.cursor()
+        c = conn.cursor()
         c.execute("SELECT COUNT(*) FROM logs")
         total = c.fetchone()[0]
         c.execute("SELECT response_type, COUNT(*) FROM logs GROUP BY response_type")
@@ -1062,3 +950,4 @@ def campaigns():
 if __name__ == "__main__":
     init_db()
     app.run(host="0.0.0.0", port=5000, debug=True)
+
