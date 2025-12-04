@@ -146,7 +146,7 @@ def translate_field_for_lang(text: str, lang: str) -> str:
     return openai_translate(text, lang)
 
 def openai_correct(text: str) -> str:
-    """تصحيح الإملاء العربي باستخدام OpenAI إن توفر."""
+    """تصحيح الإملاء العربي باستخدام OpenAI إن توفر (غير مستخدم في الشات للتسريع)."""
     if not client or not text:
         return text
     try:
@@ -344,7 +344,7 @@ def search_knowledge_base(corrected_query: str) -> Tuple[str, str]:
     return None, None
 
 # ==============================
-# 6) Chat Endpoint
+# 6) Chat Endpoint (مسرّع)
 # ==============================
 @app.route("/api/chat", methods=["POST"])
 def chat():
@@ -356,79 +356,82 @@ def chat():
     # لغة الواجهة من الفرونت (ar / en)
     ui_lang = (data.get("lang") or "").lower()
     if ui_lang not in ("ar", "en"):
-        ui_lang = None
+        ui_lang = "ar"  # افتراضي عربي
 
     if not user_message:
-        msg = "الرجاء كتابة سؤالك." if ui_lang in (None, "ar") else "Please type your question."
+        msg = "الرجاء كتابة سؤالك." if ui_lang == "ar" else "Please type your question."
         return jsonify(
             {"answer": msg, "source_type": "Error", "source_text": None}
         ), 200
 
-    # كشف لغة النص فقط لأجل الترجمة الداخلية
+    # كشف لغة النص (نستخدمه فقط كإشارة، بدون مكالمات OpenAI)
     detected_lang = "ar"
     try:
         detected_lang = detect(user_message)
     except LangDetectException:
         pass
 
-    # اللغة المستهدفة للرد (نفضّل لغة الواجهة, ثم اللغة المكتشفة)
-    target_lang = ui_lang or detected_lang or "ar"
-    if target_lang not in ("ar", "en"):
-        target_lang = "ar"
+    # الأجوبة ستكون عربية دائمًا في الأساس، إلا إذا طلبت الواجهة إنجليزي
+    target_lang = ui_lang
 
-    # تحويل السؤال للعربية للبحث في القاعدة المعرفية
-    if detected_lang == "ar" or not client:
-        query = user_message
-    else:
-        query = openai_translate(user_message, "ar")
-
-    # تصحيح السؤال بالعربي (يساعد الذكاء الاصطناعي + القاعدة)
-    corrected = openai_correct(query) or query
-
-    answer, source_text = search_knowledge_base(corrected)
+    # نحاول قاعدة المعرفة أولًا فقط إذا السؤال بالعربي
+    answer = None
+    source_text = None
     source_type = None
-    final_text = None  # النص النهائي الذي سيرسل للفرونت
+    final_text = None
+
+    if detected_lang == "ar":
+        answer, source_text = search_knowledge_base(user_message)
 
     if answer:
-        # وجدنا إجابة من القاعدة المعرفية
+        # وجدنا إجابة من القاعدة المعرفية (سريع جدًا)
         source_type = "KB"
-        core_ar = answer if want_detail else summarize_and_simplify(answer, 250)
+        core_ar = answer if want_detail else summarize_and_simplify(answer, 220)
         src_label = source_text or "مرجع طبي موثوق"
         final_ar = (
             f"مصدر المعلومة الأساسي: {src_label}\n\n"
             f"{core_ar}\n\n"
             f"{BASE_FOOTER}"
         )
-        # ترجمة حسب لغة الواجهة (عربي / إنجليزي)
-        final_text = final_ar
-        if target_lang != "ar" and client:
-            final_text = openai_translate(final_ar, target_lang)
+
+        # إذا الواجهة إنجليزية نحاول نترجم الإجابة مرة واحدة (مكالمة واحدة فقط)
+        if target_lang == "en" and client:
+            final_text = openai_translate(final_ar, "en")
+        else:
+            final_text = final_ar
 
     else:
         # لا توجد إجابة في القاعدة المعرفية
         if client and not FORCE_AI_FALLBACK:
-            # نحاول استخدام الذكاء الاصطناعي أولاً (مع هدف أن يكون الرد مختصر قدر الإمكان لسرعة أعلى)
+            # نحاول استخدام OpenAI مباشرة بمكالمة واحدة فقط
             try:
+                prompt_lang = "العربية" if target_lang == "ar" else "الإنجليزية"
+                system_instruction = (
+                    f"أنت مساعد طبي يجيب عن أسئلة التبرع بالدم وفق إرشادات وزارة الصحة السعودية فقط.\n"
+                    f"- أجب باختصار قدر الإمكان.\n"
+                    f"- أجب بلغة الواجهة المطلوبة: {prompt_lang}.\n"
+                    f"- إن لم تكن متأكداً، اعتذر بلطف واطلب مراجعة الطبيب أو التواصل مع فريق زمرة.\n"
+                )
+
                 res = client.chat.completions.create(
                     model=OPENAI_MODEL,
                     messages=[
                         {
+                            "role": "system",
+                            "content": system_instruction,
+                        },
+                        {
                             "role": "user",
-                            "content": (
-                                "أنت مساعد طبي يجيب عن أسئلة التبرع بالدم "
-                                "وفق إرشادات وزارة الصحة السعودية فقط. "
-                                "إن لم تكن متأكداً، اعتذر بلطف واطلب من المستخدم مراجعة الطبيب "
-                                "أو التواصل مع فريق زمرة.\n\n"
-                                f"سؤال المستخدم:\n{corrected}"
-                            ),
-                        }
+                            "content": user_message,
+                        },
                     ],
-                    max_tokens=320,  # قيمة صغيرة نسبياً لسرعة أفضل
+                    max_tokens=220,  # أصغر لسرعة أعلى
+                    temperature=0.3,
                 )
-                ai_text_ar = (res.choices[0].message.content or "").strip()
+                ai_text = (res.choices[0].message.content or "").strip()
 
-                # لو الذكاء الاصطناعي رجّع شيء غريب أو قصير جدًا → نستخدم رسالة fallback زمرة
-                if not ai_text_ar or len(ai_text_ar) < 15:
+                # لو الذكاء الاصطناعي رجّع شيء غريب أو قصير جدًا → نستخدم رسالة عدم الفهم
+                if not ai_text or len(ai_text) < 15:
                     source_type = "Fallback"
                     source_text = "فريق زمرة"
 
@@ -453,16 +456,16 @@ def chat():
                     )
 
                     base_ar = (
-                        "لم أستطع فهم سؤالك بشكل دقيق.\n"
-                        "إذا كنت بحاجة لمساعدة مباشرة، يمكنك التواصل مع فريق زمرة عبر واتساب.\n\n"
+                        "لم أستطع فهم سؤالك بشكل دقيق أو لم تكن التفاصيل كافية.\n"
+                        "لأمانك الصحي، يُفضّل التأكد من طبيبك أو التواصل مع فريق زمرة مباشرة.\n\n"
                         f"{wa_btn_ar}\n\n"
                         "المصدر: فريق زمرة\n\n"
                         f"{BASE_FOOTER}"
                     )
 
                     base_en = (
-                        "I couldn’t clearly understand your question.\n"
-                        "If you need direct assistance, you can contact the Zomrah team via WhatsApp.\n\n"
+                        "I couldn’t clearly understand your question or the details were not sufficient.\n"
+                        "For your safety, please double-check with your doctor or contact the Zomrah team directly.\n\n"
                         f"{wa_btn_en}\n\n"
                         "Source: Zomrah team\n\n"
                         f"{BASE_FOOTER}"
@@ -470,22 +473,24 @@ def chat():
 
                     final_text = base_en if target_lang == "en" else base_ar
                 else:
-                    core_ar = ai_text_ar if want_detail else summarize_and_simplify(ai_text_ar, 250)
+                    # رد OpenAI طبيعي
+                    core_txt = ai_text if want_detail else summarize_and_simplify(ai_text, 230)
                     source_type = "AI"
-                    # نُعرّف مصدرًا عامًّا للذكاء الاصطناعي
                     source_text = "إرشادات وزارة الصحة السعودية ومراجع طبية موثوقة"
                     final_ar = (
-                        "لم نعثر على إجابة في قاعدة المعرفة؛ استعنا بنموذج ذكاء اصطناعي لصياغة الرد التالي:\n\n"
-                        f"{core_ar}\n\n"
+                        "لم نعثر على إجابة في قاعدة المعرفة؛ استعنا بـ OpenAI لصياغة الرد التالي:\n\n"
+                        f"{core_txt}\n\n"
                         f"مصدر المعلومة الأساسي: {source_text}\n\n"
                         f"{BASE_FOOTER}"
                     )
-                    final_text = final_ar
-                    if target_lang != "ar" and client:
-                        final_text = openai_translate(final_ar, target_lang)
+
+                    if target_lang == "en" and client:
+                        final_text = openai_translate(final_ar, "en")
+                    else:
+                        final_text = final_ar
 
             except Exception as e:
-                # في حال فشلت مكالمة الذكاء الاصطناعي نرجع رسالة fallback زمرة
+                # في حال فشلت مكالمة الذكاء الاصطناعي نرجع رسالة عدم الفهم
                 source_type = "Fallback"
                 source_text = "فريق زمرة"
 
@@ -510,18 +515,16 @@ def chat():
                 )
 
                 base_ar = (
-                    "لم أستطع فهم سؤالك بشكل دقيق.\n"
-                    "حدثت أيضاً مشكلة في الاتصال بالذكاء الاصطناعي.\n"
-                    "إذا كنت بحاجة لمساعدة مباشرة، يمكنك التواصل مع فريق زمرة عبر واتساب.\n\n"
+                    "لم أستطع فهم سؤالك بشكل دقيق، وحدثت مشكلة في الاتصال بخدمة الذكاء الاصطناعي.\n"
+                    "لأمانك الصحي، يُفضّل مراجعة طبيبك أو التواصل مع فريق زمرة مباشرة.\n\n"
                     f"{wa_btn_ar}\n\n"
                     "المصدر: فريق زمرة\n\n"
                     f"{BASE_FOOTER}"
                 )
 
                 base_en = (
-                    "I couldn’t clearly understand your question.\n"
-                    "There was also an issue connecting to the AI service.\n"
-                    "If you need direct assistance, you can contact the Zomrah team via WhatsApp.\n\n"
+                    "I couldn’t clearly understand your question and there was an issue connecting to the AI service.\n"
+                    "For your safety, please consult your doctor or contact the Zomrah team directly.\n\n"
                     f"{wa_btn_en}\n\n"
                     "Source: Zomrah team\n\n"
                     f"{BASE_FOOTER}"
@@ -530,7 +533,7 @@ def chat():
                 final_text = base_en if target_lang == "en" else base_ar
 
         else:
-            # وضع KB فقط أو الذكاء الاصطناعي معطّل → رسالة fallback زمرة مباشرة
+            # وضع KB فقط أو الذكاء الاصطناعي معطّل → رسالة عدم الفهم مباشرة
             source_type = "Fallback"
             source_text = "فريق زمرة"
 
@@ -556,7 +559,7 @@ def chat():
 
             base_ar = (
                 "لم أستطع فهم سؤالك بشكل دقيق.\n"
-                "إذا كنت بحاجة لمساعدة مباشرة، يمكنك التواصل مع فريق زمرة عبر واتساب.\n\n"
+                "لأمانك الصحي، يُفضّل مراجعة طبيبك أو التواصل مع فريق زمرة مباشرة.\n\n"
                 f"{wa_btn_ar}\n\n"
                 "المصدر: فريق زمرة\n\n"
                 f"{BASE_FOOTER}"
@@ -564,7 +567,7 @@ def chat():
 
             base_en = (
                 "I couldn’t clearly understand your question.\n"
-                "If you need direct assistance, you can contact the Zomrah team via WhatsApp.\n\n"
+                "For your safety, please consult your doctor or contact the Zomrah team directly.\n\n"
                 f"{wa_btn_en}\n\n"
                 "Source: Zomrah team\n\n"
                 f"{BASE_FOOTER}"
@@ -572,17 +575,20 @@ def chat():
 
             final_text = base_en if target_lang == "en" else base_ar
 
+    # في اللوج نخزّن الرسالة كما هي (ما في تصحيح الآن لتسريع الرد)
+    corrected_for_log = user_message
+
     # تأكد أن عندنا نص نهائي
     if final_text is None:
         final_text = "حدث خطأ غير متوقع.\n\n" + BASE_FOOTER
 
-    save_log(user_message, corrected, source_type, source_text, final_text)
+    save_log(user_message, corrected_for_log, source_type, source_text, final_text)
     return jsonify(
         {
             "answer": final_text,
             "source_type": source_type,
             "source_text": source_text,
-            "corrected_message": corrected,
+            "corrected_message": corrected_for_log,
         }
     ), 200
 
@@ -1024,8 +1030,9 @@ def upload_audio():
     if "audio_file" not in request.files:
         return jsonify({"error": "لم يتم إرسال ملف صوتي"}), 400
 
+    # لتسريع التجربة: نفترض أنه سأل عن شروط التبرع
     text = "ما هي شروط التبرع بالدم؟"
-    corrected = openai_correct(text) or text
+    corrected = text  # بدون تصحيح عبر OpenAI لسرعة أكبر
     answer, src = search_knowledge_base(corrected)
 
     if answer:
