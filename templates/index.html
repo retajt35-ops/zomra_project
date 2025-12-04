@@ -1002,16 +1002,14 @@
         if (!FILTERED_CENTERS || !FILTERED_CENTERS.length){
           displayError(CURRENT_LANG === 'ar'
             ? 'لا توجد مراكز مطابقة حاليا. أعد التعيين أو وسّع البحث.'
-            : 'No matching centers. Reset or broaden your filters.'
-          );
+            : 'No matching centers. Reset or broaden your filters.');
           return;
         }
         var n = findNearest([fromLat, fromLng]);
         if(!n){
           displayError(CURRENT_LANG === 'ar'
             ? 'تعذّر تحديد أقرب مركز.'
-            : 'Could not determine the nearest center.'
-          );
+            : 'Could not determine the nearest center.');
           return;
         }
         var url = gmapsDirections(fromLat, fromLng, n.lat, n.lng);
@@ -1133,22 +1131,42 @@
         removeLoading(loadingDiv); setInteractionState(true);
       }
 
-     if (data) {
-  // دائماً نعرض ما كتبه المستخدم بدون تعديل
-  var finalUserMessage = rawMessage;
+      if (data) {
+        // نتحقق من الرد من الباك إند (رسالة عدم الفهم من جهة الفرونت لو الرد فاضي/قصير)
+        var answerText = (data.answer || '').trim();
 
-  // إذا كانت الواجهة عربية و الباك صلح السؤال → نعرض النسخة المصحّحة
-  if (CURRENT_LANG === 'ar' && data.corrected_message) {
-    finalUserMessage = data.corrected_message;
-  }
+        if (!answerText || answerText.length < 10) {
+          var fallbackMsg = (CURRENT_LANG === 'ar')
+            ? 'لم أستطع فهم سؤالك بشكل كامل. حاول أن تكتب سؤالك عن التبرع بالدم بشكل أبسط أو أكثر تحديدًا.'
+            : 'I couldn’t fully understand your question. Please try asking about blood donation in a simpler or more specific way.';
 
-  displayMessage(finalUserMessage, 'user');
-  displayAnswerWithControls(data.answer || '', finalUserMessage);
+          var finalUserMessageNF = rawMessage;
+          if (CURRENT_LANG === 'ar' && data.corrected_message) {
+            finalUserMessageNF = data.corrected_message;
+          }
 
-  if (isLocationIntent(rawMessage)) {
-    openNearestAuto();
-  }
-}
+          displayMessage(finalUserMessageNF, 'user');
+          displayMessage(fallbackMsg, 'bot');
+
+          if (isLocationIntent(rawMessage)) {
+            openNearestAuto();
+          }
+          return;
+        }
+
+        // دائماً نعرض ما كتبه المستخدم (او النسخة المصححة بالعربي)
+        var finalUserMessage = rawMessage;
+        if (CURRENT_LANG === 'ar' && data.corrected_message) {
+          finalUserMessage = data.corrected_message;
+        }
+
+        displayMessage(finalUserMessage, 'user');
+        displayAnswerWithControls(answerText, finalUserMessage);
+
+        if (isLocationIntent(rawMessage)) {
+          openNearestAuto();
+        }
+      }
 
     });
 
@@ -1359,11 +1377,11 @@
 
         const recent = procYes
           ? parseInt(document.getElementById('recent_procedure_days')?.value || '0', 10)
-          : 9999; // لا يوجد إجراء حديث
+          : 9999;
 
         const tattoo = tattooYes
           ? parseInt(document.getElementById('tattoo_months')?.value || '0', 10)
-          : 999; // لا يوجد وشم خلال فترة قريبة
+          : 999;
 
         const payload = {
           age, weight, last_donation_days:last,
@@ -1405,7 +1423,7 @@
           if (reasons.length){
             html += '<ul style="margin:8px 16px 0 0">';
             reasons.forEach(rsn=>{
-              html += '<li>'+ rsn +'</li>'; // الأسباب من الباك-إند بالعربي
+              html += '<li>'+ rsn +'</li>';
             });
             html += '</ul>';
           } else {
@@ -1685,3 +1703,4 @@
   </script>
 </body>
 </html>
+
