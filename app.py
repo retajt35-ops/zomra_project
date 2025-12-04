@@ -68,6 +68,7 @@ if not OPENAI_API_KEY:
 client = None
 if OPENAI_API_KEY:
     try:
+        # نهيئ عميل OpenAI
         client = OpenAI(api_key=OPENAI_API_KEY)
     except Exception as e:
         print(f"⚠️ فشل تهيئة OpenAI: {e}")
@@ -97,7 +98,7 @@ def normalize_arabic(text: str) -> str:
     return t
 
 def summarize_and_simplify(text: str, max_length: int = 250) -> str:
-    """تقليل طول النص مع احترام الجمل قدر الإمكان."""
+    """تقليل طول النص مع احترام الجمل قدر الإمكان (يساعد في سرعة الرد)."""
     if not text or len(text) <= max_length:
         return text
     cut_marks = [".", "؟", "!", "…"]
@@ -127,6 +128,7 @@ def openai_translate(text: str, target_language_code: str) -> str:
         resp = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[{"role": "user", "content": prompt}],
+            max_tokens=256,  # تقليل الحد لسرعة أكبر
         )
         out = (resp.choices[0].message.content or "").strip()
         # إزالة أي مقدمة مثل: "الترجمة:"
@@ -152,6 +154,7 @@ def openai_correct(text: str) -> str:
         resp = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[{"role": "user", "content": prompt}],
+            max_tokens=128,  # صغير لسرعة التصحيح
         )
         out = (resp.choices[0].message.content or "").strip()
         return out.split(":", 1)[-1].strip() if ":" in out[:15] else out
@@ -379,12 +382,15 @@ def chat():
     else:
         query = openai_translate(user_message, "ar")
 
+    # تصحيح السؤال بالعربي (يساعد الذكاء الاصطناعي + القاعدة)
     corrected = openai_correct(query) or query
 
     answer, source_text = search_knowledge_base(corrected)
     source_type = None
+    final_text = None  # النص النهائي الذي سيرسل للفرونت
 
     if answer:
+        # وجدنا إجابة من القاعدة المعرفية
         source_type = "KB"
         core_ar = answer if want_detail else summarize_and_simplify(answer, 250)
         src_label = source_text or "مرجع طبي موثوق"
@@ -393,9 +399,15 @@ def chat():
             f"{core_ar}\n\n"
             f"{BASE_FOOTER}"
         )
+        # ترجمة حسب لغة الواجهة (عربي / إنجليزي)
+        final_text = final_ar
+        if target_lang != "ar" and client:
+            final_text = openai_translate(final_ar, target_lang)
+
     else:
         # لا توجد إجابة في القاعدة المعرفية
         if client and not FORCE_AI_FALLBACK:
+            # نحاول استخدام الذكاء الاصطناعي أولاً (مع هدف أن يكون الرد مختصر قدر الإمكان لسرعة أعلى)
             try:
                 res = client.chat.completions.create(
                     model=OPENAI_MODEL,
@@ -405,46 +417,169 @@ def chat():
                             "content": (
                                 "أنت مساعد طبي يجيب عن أسئلة التبرع بالدم "
                                 "وفق إرشادات وزارة الصحة السعودية فقط. "
-                                "إن لم تكن متأكداً، اعتذر واطلب من المستخدم مراجعة الطبيب.\n\n"
+                                "إن لم تكن متأكداً، اعتذر بلطف واطلب من المستخدم مراجعة الطبيب "
+                                "أو التواصل مع فريق زمرة.\n\n"
                                 f"سؤال المستخدم:\n{corrected}"
                             ),
                         }
                     ],
+                    max_tokens=320,  # قيمة صغيرة نسبياً لسرعة أفضل
                 )
                 ai_text_ar = (res.choices[0].message.content or "").strip()
-                core_ar = ai_text_ar if want_detail else summarize_and_simplify(ai_text_ar, 250)
-                source_type = "AI"
-                # نُعرّف مصدرًا عامًّا للذكاء الاصطناعي
-                source_text = "إرشادات وزارة الصحة السعودية ومراجع طبية موثوقة"
-                final_ar = (
-                    "لم نعثر على إجابة في قاعدة المعرفة؛ استعنا بـ Gemini لصياغة الرد التالي:\n\n"
-                    f"{core_ar}\n\n"
-                    f"مصدر المعلومة الأساسي: {source_text}\n\n"
+
+                # لو الذكاء الاصطناعي رجّع شيء غريب أو قصير جدًا → نستخدم رسالة fallback زمرة
+                if not ai_text_ar or len(ai_text_ar) < 15:
+                    source_type = "Fallback"
+                    source_text = "فريق زمرة"
+
+                    wa_btn_ar = (
+                        '<a href="https://wa.me/966504635135?text=أهلاً%20فريق%20زمرة،%20أحتاج%20مساعدة%20بخصوص%20مساعد%20التبرع%20بالدم." '
+                        'target="_blank" rel="noopener" '
+                        'style="display:inline-block;margin-top:8px;padding:8px 14px;'
+                        'border-radius:999px;background:#25D366;color:#fff;'
+                        'text-decoration:none;font-weight:700;">'
+                        'التواصل مع فريق زمرة عبر واتساب'
+                        '</a>'
+                    )
+
+                    wa_btn_en = (
+                        '<a href="https://wa.me/966504635135?text=Hello%20Zomrah%20team,%20I%20need%20help%20with%20the%20blood%20donation%20assistant." '
+                        'target="_blank" rel="noopener" '
+                        'style="display:inline-block;margin-top:8px;padding:8px 14px;'
+                        'border-radius:999px;background:#25D366;color:#fff;'
+                        'text-decoration:none;font-weight:700;">'
+                        'Contact Zomrah team on WhatsApp'
+                        '</a>'
+                    )
+
+                    base_ar = (
+                        "لم أستطع فهم سؤالك بشكل دقيق.\n"
+                        "إذا كنت بحاجة لمساعدة مباشرة، يمكنك التواصل مع فريق زمرة عبر واتساب.\n\n"
+                        f"{wa_btn_ar}\n\n"
+                        "المصدر: فريق زمرة\n\n"
+                        f"{BASE_FOOTER}"
+                    )
+
+                    base_en = (
+                        "I couldn’t clearly understand your question.\n"
+                        "If you need direct assistance, you can contact the Zomrah team via WhatsApp.\n\n"
+                        f"{wa_btn_en}\n\n"
+                        "Source: Zomrah team\n\n"
+                        f"{BASE_FOOTER}"
+                    )
+
+                    final_text = base_en if target_lang == "en" else base_ar
+                else:
+                    core_ar = ai_text_ar if want_detail else summarize_and_simplify(ai_text_ar, 250)
+                    source_type = "AI"
+                    # نُعرّف مصدرًا عامًّا للذكاء الاصطناعي
+                    source_text = "إرشادات وزارة الصحة السعودية ومراجع طبية موثوقة"
+                    final_ar = (
+                        "لم نعثر على إجابة في قاعدة المعرفة؛ استعنا بنموذج ذكاء اصطناعي لصياغة الرد التالي:\n\n"
+                        f"{core_ar}\n\n"
+                        f"مصدر المعلومة الأساسي: {source_text}\n\n"
+                        f"{BASE_FOOTER}"
+                    )
+                    final_text = final_ar
+                    if target_lang != "ar" and client:
+                        final_text = openai_translate(final_ar, target_lang)
+
+            except Exception as e:
+                # في حال فشلت مكالمة الذكاء الاصطناعي نرجع رسالة fallback زمرة
+                source_type = "Fallback"
+                source_text = "فريق زمرة"
+
+                wa_btn_ar = (
+                    '<a href="https://wa.me/966504635135?text=أهلاً%20فريق%20زمرة،%20أحتاج%20مساعدة%20بخصوص%20مساعد%20التبرع%20بالدم." '
+                    'target="_blank" rel="noopener" '
+                    'style="display:inline-block;margin-top:8px;padding:8px 14px;'
+                    'border-radius:999px;background:#25D366;color:#fff;'
+                    'text-decoration:none;font-weight:700;">'
+                    'التواصل مع فريق زمرة عبر واتساب'
+                    '</a>'
+                )
+
+                wa_btn_en = (
+                    '<a href="https://wa.me/966504635135?text=Hello%20Zomrah%20team,%20I%20need%20help%20with%20the%20blood%20donation%20assistant." '
+                    'target="_blank" rel="noopener" '
+                    'style="display:inline-block;margin-top:8px;padding:8px 14px;'
+                    'border-radius:999px;background:#25D366;color:#fff;'
+                    'text-decoration:none;font-weight:700;">'
+                    'Contact Zomrah team on WhatsApp'
+                    '</a>'
+                )
+
+                base_ar = (
+                    "لم أستطع فهم سؤالك بشكل دقيق.\n"
+                    "حدثت أيضاً مشكلة في الاتصال بالذكاء الاصطناعي.\n"
+                    "إذا كنت بحاجة لمساعدة مباشرة، يمكنك التواصل مع فريق زمرة عبر واتساب.\n\n"
+                    f"{wa_btn_ar}\n\n"
+                    "المصدر: فريق زمرة\n\n"
                     f"{BASE_FOOTER}"
                 )
-            except Exception as e:
-                final = f"عذرًا، حدثت مشكلة في الاتصال بالذكاء الاصطناعي: {e}"
-                save_log(user_message, corrected, "Error", None, final)
-                return jsonify(
-                    {"answer": final, "source_type": "Error", "corrected_message": corrected}
-                ), 500
+
+                base_en = (
+                    "I couldn’t clearly understand your question.\n"
+                    "There was also an issue connecting to the AI service.\n"
+                    "If you need direct assistance, you can contact the Zomrah team via WhatsApp.\n\n"
+                    f"{wa_btn_en}\n\n"
+                    "Source: Zomrah team\n\n"
+                    f"{BASE_FOOTER}"
+                )
+
+                final_text = base_en if target_lang == "en" else base_ar
+
         else:
-            source_type = "KB-Only"
-            final_ar = (
-                "عذرًا، لا توجد إجابة محددة في قاعدة المعرفة حاليًا، "
-                "والذكاء الاصطناعي غير مفعّل.\n\n"
+            # وضع KB فقط أو الذكاء الاصطناعي معطّل → رسالة fallback زمرة مباشرة
+            source_type = "Fallback"
+            source_text = "فريق زمرة"
+
+            wa_btn_ar = (
+                '<a href="https://wa.me/966504635135?text=أهلاً%20فريق%20زمرة،%20أحتاج%20مساعدة%20بخصوص%20مساعد%20التبرع%20بالدم." '
+                'target="_blank" rel="noopener" '
+                'style="display:inline-block;margin-top:8px;padding:8px 14px;'
+                'border-radius:999px;background:#25D366;color:#fff;'
+                'text-decoration:none;font-weight:700;">'
+                'التواصل مع فريق زمرة عبر واتساب'
+                '</a>'
+            )
+
+            wa_btn_en = (
+                '<a href="https://wa.me/966504635135?text=Hello%20Zomrah%20team,%20I%20need%20help%20with%20the%20blood%20donation%20assistant." '
+                'target="_blank" rel="noopener" '
+                'style="display:inline-block;margin-top:8px;padding:8px 14px;'
+                'border-radius:999px;background:#25D366;color:#fff;'
+                'text-decoration:none;font-weight:700;">'
+                'Contact Zomrah team on WhatsApp'
+                '</a>'
+            )
+
+            base_ar = (
+                "لم أستطع فهم سؤالك بشكل دقيق.\n"
+                "إذا كنت بحاجة لمساعدة مباشرة، يمكنك التواصل مع فريق زمرة عبر واتساب.\n\n"
+                f"{wa_btn_ar}\n\n"
+                "المصدر: فريق زمرة\n\n"
                 f"{BASE_FOOTER}"
             )
 
-    # ترجمة الرد النهائي حسب لغة الواجهة (أو المكتشفة)
-    final = final_ar
-    if target_lang != "ar" and client:
-        final = openai_translate(final_ar, target_lang)
+            base_en = (
+                "I couldn’t clearly understand your question.\n"
+                "If you need direct assistance, you can contact the Zomrah team via WhatsApp.\n\n"
+                f"{wa_btn_en}\n\n"
+                "Source: Zomrah team\n\n"
+                f"{BASE_FOOTER}"
+            )
 
-    save_log(user_message, corrected, source_type, source_text, final)
+            final_text = base_en if target_lang == "en" else base_ar
+
+    # تأكد أن عندنا نص نهائي
+    if final_text is None:
+        final_text = "حدث خطأ غير متوقع.\n\n" + BASE_FOOTER
+
+    save_log(user_message, corrected, source_type, source_text, final_text)
     return jsonify(
         {
-            "answer": final,
+            "answer": final_text,
             "source_type": source_type,
             "source_text": source_text,
             "corrected_message": corrected,
@@ -570,7 +705,6 @@ def urgent_needs():
     base_text_ar = "احتياجات عاجلة (يرجى الاتصال قبل الزيارة)."
     base_text_en = "Urgent needs (please call the hospital before visiting)."
     if lang == "en" and client:
-        # لو حابة ممكن نترجم النص العربي، لكن هنا استخدمنا جملة جاهزة
         answer_en = base_text_en
     else:
         answer_en = base_text_en
@@ -950,4 +1084,3 @@ def campaigns():
 if __name__ == "__main__":
     init_db()
     app.run(host="0.0.0.0", port=5000, debug=True)
-
