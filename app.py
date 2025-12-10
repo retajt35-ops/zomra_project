@@ -366,44 +366,35 @@ def chat():
     user_message = raw.strip()
     want_detail = bool(data.get("detail"))
 
-    # لغة الواجهة
+    # لغة الواجهة من الفرونت (ar / en)
     ui_lang = (data.get("lang") or "").lower()
     if ui_lang not in ("ar", "en"):
-        ui_lang = "ar"
+        ui_lang = "ar"  # افتراضي عربي
 
-    # ❗ إصلاح: شرط فارغ أو سؤال غير مفهوم
-    if not user_message or len(user_message) < 2:
-        msg_ar = (
-            "عذرًا، لم أفهم سؤالك. هل يمكنك إعادة صياغته؟\n"
-            "لم أستطع فهم سؤالك بشكل دقيق. إذا كنت بحاجة لمساعدة مباشرة، "
-            "يمكنك التواصل مع فريق زمرة عبر واتساب."
-        )
-        msg_en = (
-            "Sorry, I couldn’t understand your question. Could you rephrase it?\n"
-            "If you need direct help, you may contact the Zomrah team via WhatsApp."
-        )
+    if not user_message:
+        msg = "الرجاء كتابة سؤالك." if ui_lang == "ar" else "Please type your question."
+        return jsonify(
+            {
+                "answer": msg,
+                "source_type": "Error",
+                "source_text": None,
+                "not_understood": True,
+                "corrected_message": user_message,
+            }
+        ), 200
 
-        final_msg = msg_ar if ui_lang == "ar" else msg_en
-
-        return jsonify({
-            "answer": final_msg,
-            "source_type": "Error",
-            "source_text": None,
-            "corrected_message": user_message,
-            "not_understood": True
-        }), 200
-
-    # كشف اللغة
+    # كشف لغة النص (سريع)
+    detected_lang = "ar"
     try:
         detected_lang = detect(user_message)
-    except:
-        detected_lang = "ar"
+    except LangDetectException:
+        pass
 
-    target_lang = ui_lang
+    target_lang = ui_lang  # نجيب بنفس لغة الواجهة قدر الإمكان
 
-    # ==========================
-    # 1) البحث في القاعدة المعرفية
-    # ==========================
+    # --------------------------
+    # 1) نحاول من قاعدة المعرفة
+    # --------------------------
     SIM_THRESHOLD = 85
     kb_answer = None
     kb_source = None
@@ -412,122 +403,34 @@ def chat():
     if detected_lang == "ar":
         kb_answer, kb_source, kb_score = search_knowledge_base(user_message)
 
+    # لو التشابه >= 85 ⇠ نثق في القاعدة
     if kb_answer and kb_score >= SIM_THRESHOLD:
         source_type = "KB"
         source_text = kb_source or "مرجع طبي موثوق"
+        not_understood = False
 
         core_ar = kb_answer if want_detail else summarize_and_simplify(kb_answer, 220)
-
         final_ar = (
             f"مصدر المعلومة الأساسي: {source_text}\n\n"
-            f"{core_ar}\n\n{BASE_FOOTER}"
+            f"{core_ar}\n\n"
+            f"{BASE_FOOTER}"
         )
 
-        final_text = openai_translate(final_ar, "en") if (target_lang == "en" and client) else final_ar
+        if target_lang == "en" and client:
+            final_text = openai_translate(final_ar, "en")
+        else:
+            final_text = final_ar
 
         save_log(user_message, user_message, source_type, source_text, final_text)
-
-        return jsonify({
-            "answer": final_text,
-            "source_type": source_type,
-            "source_text": source_text,
-            "corrected_message": user_message,
-            "not_understood": False
-        }), 200
-
-    # ==========================
-    # 2) fallback (لم أفهم)
-    # ==========================
-
-    def fallback(lang, ai_error=False):
-        wa = "https://wa.me/966504635135"
-
-        if lang == "ar":
-            txt = "لم أستطع فهم سؤالك…"
-            if ai_error:
-                txt += "\nحدث خطأ أثناء الاتصال بخدمة الذكاء الاصطناعي."
-            txt += (
-                "\nيمكنك التواصل مع فريق زمرة عبر واتساب:\n\n"
-                f'<a href="{wa}" target="_blank" rel="noopener" '
-                'style="padding:8px 14px;background:#25D366;color:#fff;'
-                'display:inline-block;border-radius:999px;font-weight:700;">'
-                'التواصل عبر واتساب</a>\n\n'
-                f"{BASE_FOOTER}"
-            )
-            return txt, "Fallback", "فريق زمرة"
-
-        else:
-            txt = "I could not understand your question…"
-            if ai_error:
-                txt += "\nThere was a problem connecting to the AI service."
-            txt += (
-                "\nYou can contact the Zomrah team via WhatsApp:\n\n"
-                f'<a href="{wa}" target="_blank" rel="noopener" '
-                'style="padding:8px 14px;background:#25D366;color:#fff;'
-                'display:inline-block;border-radius:999px;font-weight:700;">'
-                'Contact via WhatsApp</a>\n\n'
-                f"{BASE_FOOTER}"
-            )
-            return txt, "Fallback", "Zomrah team"
-
-    if (not client) or FORCE_AI_FALLBACK:
-        txt, stype, stext = fallback(target_lang, False)
-        save_log(user_message, user_message, stype, stext, txt)
-        return jsonify({
-            "answer": txt,
-            "source_type": stype,
-            "source_text": stext,
-            "corrected_message": user_message,
-            "not_understood": True
-        }), 200
-
-    # ==========================
-    # 3) AI attempt (OpenAI)
-    # ==========================
-    try:
-        instruction = (
-            "أنت مساعد طبي متخصص في التبرع بالدم…"
-            if target_lang == "ar"
-            else "You are a medical assistant specialized in blood donation…"
-        )
-
-        res = client.chat.completions.create(
-            model=OPENAI_MODEL,
-            messages=[
-                {"role": "system", "content": instruction},
-                {"role": "user", "content": user_message},
-            ],
-            max_tokens=200,
-            temperature=0.3,
-        )
-
-        ai_text = (res.choices[0].message.content or "").strip()
-
-        if not ai_text or len(ai_text) < 15:
-            raise Exception("AI returned empty/too short")
-
-        final_text = ai_text if want_detail else summarize_and_simplify(ai_text, 230)
-
-        save_log(user_message, user_message, "AI", "MOH Guidelines", final_text)
-
-        return jsonify({
-            "answer": final_text,
-            "source_type": "AI",
-            "source_text": "إرشادات وزارة الصحة",
-            "corrected_message": user_message,
-            "not_understood": True
-        }), 200
-
-    except:
-        txt, stype, stext = fallback(target_lang, True)
-        return jsonify({
-            "answer": txt,
-            "source_type": stype,
-            "source_text": stext,
-            "corrected_message": user_message,
-            "not_understood": True
-        }), 200
-
+        return jsonify(
+            {
+                "answer": final_text,
+                "source_type": source_type,
+                "source_text": source_text,
+                "corrected_message": user_message,
+                "not_understood": not_understood,
+            }
+        ), 200
 
     # --------------------------
     # 2) هنا نعتبر أن السؤال "غير مفهوم من القاعدة"
