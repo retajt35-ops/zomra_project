@@ -99,19 +99,29 @@ def normalize_arabic(text: str) -> str:
     return t
 
 
-def summarize_and_simplify(text: str, max_length: int = 250) -> str:
-    """تقليل طول النص مع احترام الجمل قدر الإمكان (يساعد في سرعة الرد)."""
+def summarize_and_simplify(text: str, max_length: int = 250, lang: str = "ar") -> str:
+    """تقليل طول النص مع احترام الجمل قدر الإمكان (يدعم العربية والإنجليزية)."""
+
     if not text or len(text) <= max_length:
         return text
+
     cut_marks = [".", "؟", "!", "…"]
     trunc = text[: max_length - 5]
     cut_pos = max(trunc.rfind(m) for m in cut_marks)
+
     if cut_pos == -1:
         cut_pos = trunc.rfind(" ")
         if cut_pos == -1:
             cut_pos = len(trunc)
+
     summary = trunc[:cut_pos].strip()
-    return f"{summary}...\n\nهل ترغب بالتفصيل أكثر؟"
+
+    # الرسالة حسب اللغة
+    if lang == "en":
+        return f"{summary}...\n\nWould you like more details?"
+    else:
+        return f"{summary}...\n\nهل ترغب بالتفصيل أكثر؟"
+
 
 
 def openai_translate(text: str, target_language_code: str) -> str:
