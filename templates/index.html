@@ -38,16 +38,22 @@
       min-height:100vh;
       padding:20px;
       box-sizing:border-box;
-      color:var(--primary-text)
+      color:var(--primary-text);
     }
+
+    /* تخطيط عام */
     .main-wrapper{
       display:flex;
-      flex-direction:row-reverse;
       width:100%;
       max-width:1300px;
       gap:25px;
-      height:100%
+      height:100%;
     }
+
+    /* انعكاس الاتجاه */
+    body.rtl .main-wrapper{flex-direction:row-reverse;}
+    body.ltr .main-wrapper{flex-direction:row;}
+
     .chat-container{
       flex:3;
       background:var(--card-background);
@@ -57,13 +63,13 @@
       flex-direction:column;
       overflow:hidden;
       height:calc(100vh - 40px);
-      min-height:700px
+      min-height:700px;
     }
     .sidebar-container{
       flex:1.2;
       display:flex;
       flex-direction:column;
-      gap:20px
+      gap:20px;
     }
     .sidebar-box{
       background:var(--card-background);
@@ -72,7 +78,7 @@
       padding:20px;
       display:flex;
       flex-direction:column;
-      gap:15px
+      gap:15px;
     }
     .sidebar-box h2{
       color:var(--burgundy-dark);
@@ -80,11 +86,11 @@
       font-weight:800;
       margin:0;
       padding-bottom:10px;
-      border-bottom:2px solid #EEE
+      border-bottom:2px solid #EEE;
     }
+
     .sidebar-btn{
       display:flex;
-      flex-direction:row-reverse;
       align-items:center;
       gap:15px;
       padding:15px;
@@ -95,34 +101,39 @@
       border:none;
       cursor:pointer;
       min-height:60px;
-      box-shadow:0 4px 8px rgba(0,0,0,.15)
+      box-shadow:0 4px 8px rgba(0,0,0,.15);
     }
+
+    body.rtl .sidebar-btn{flex-direction:row-reverse;}
+    body.ltr .sidebar-btn{flex-direction:row;}
+
     .sidebar-btn.hospital{background-image:var(--gradient-hospital-btn)}
     .sidebar-btn.urgent{background-image:var(--gradient-urgent-btn)}
     .sidebar-btn.map{background-image:var(--gradient-map-btn)}
     .sidebar-btn.whatsapp{background-image:var(--gradient-whatsapp-btn)}
     .sidebar-btn .icon{font-size:1.8em;color:#fff;font-weight:900}
-    .sidebar-btn .label{font-weight:700;font-size:1em;flex-grow:1;text-align:right}
-    .sidebar-btn:hover:not(:disabled){
-      transform:scale(1.02);
-      opacity:.9;
-      box-shadow:0 8px 16px rgba(0,0,0,.25)
-    }
-    .sidebar-btn:disabled{cursor:not-allowed;opacity:.6}
+    .sidebar-btn .label{font-weight:700;font-size:1em;flex-grow:1;}
+    body.rtl .sidebar-btn .label{text-align:right;}
+    body.ltr .sidebar-btn .label{text-align:left;}
 
     header{
       background:var(--gradient-header);
       padding:20px;
       border-bottom:1px solid #E0E0E0;
-      text-align:right
     }
+
+    body.rtl header{text-align:right;}
+    body.ltr header{text-align:left;}
+
     .header-top{
       display:flex;
-      flex-direction:row-reverse;
       align-items:center;
       justify-content:space-between;
       gap:10px;
     }
+    body.rtl .header-top{flex-direction:row-reverse;}
+    body.ltr .header-top{flex-direction:row;}
+
     header h1{
       font-size:1.6em;
       margin:0;
@@ -130,9 +141,9 @@
       font-weight:800;
       display:flex;
       align-items:center;
-      flex-direction:row-reverse;
-      gap:10px
+      gap:10px;
     }
+
     .lang-toggle-btn{
       border:none;
       padding:8px 14px;
@@ -144,9 +155,7 @@
       font-size:.9em;
       min-width:80px;
     }
-    .lang-toggle-btn:hover{
-      background:#f3f3f3;
-    }
+    .lang-toggle-btn:hover{background:#f3f3f3;}
 
     #chat-box{
       flex-grow:1;
@@ -154,7 +163,7 @@
       overflow-y:auto;
       background:#FAFAFA;
       display:flex;
-      flex-direction:column
+      flex-direction:column;
     }
 
     .message{
@@ -164,18 +173,18 @@
       max-width:70%;
       line-height:1.7;
       font-size:.95em;
-      box-shadow:0 1px 2px rgba(0,0,0,.05)
+      box-shadow:0 1px 2px rgba(0,0,0,.05);
     }
     .bot-message{
       background:var(--bot-bubble);
       align-self:flex-start;
-      border-bottom-left-radius:var(--border-radius-sm)
+      border-bottom-left-radius:var(--border-radius-sm);
     }
     .user-message{
       background:var(--user-bubble);
       color:#fff;
       align-self:flex-end;
-      border-bottom-right-radius:var(--border-radius-sm)
+      border-bottom-right-radius:var(--border-radius-sm);
     }
     .loading-message{font-weight:700;color:var(--secondary-text);background:#F0F0F0}
     .error-message{color:#666;font-weight:700}
@@ -187,7 +196,7 @@
       border-top:1px solid #E0E0E0;
       background:var(--card-background);
       flex-shrink:0;
-      gap:8px
+      gap:8px;
     }
     #user-input{
       flex-grow:1;
@@ -196,7 +205,7 @@
       border-radius:var(--border-radius-lg);
       font-size:1em;
       outline:none;
-      transition:border-color .2s
+      transition:border-color .2s;
     }
     #user-input:focus{border-color:var(--burgundy-dark)}
     #send-btn{
@@ -208,1498 +217,617 @@
       cursor:pointer;
       font-size:1em;
       font-weight:700;
-      transition:opacity .2s,background .2s;
-      white-space:nowrap
+      transition:opacity .2s;
     }
     #send-btn:hover:not(:disabled){opacity:.9}
     #send-btn:disabled{opacity:.6;cursor:not-allowed}
-
-    #mic-btn{
-      background:#eee;
-      border:none;
-      border-radius:50%;
-      width:40px;
-      height:40px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      cursor:pointer;
-      font-size:1.1em;
-      transition:background .2s,transform .2s
-    }
-    #mic-btn:hover{background:#ddd;transform:translateY(-1px)}
-
-    #mic-btn.recording{
-      background:#ffcccc;
-      animation:pulse 1s infinite;
-    }
-    @keyframes pulse{
-      0%{transform:scale(1);}
-      50%{transform:scale(1.08);}
-      100%{transform:scale(1);}
-    }
-
-    .translation-block{margin-top:10px}
-    .toggle-btn{
-      margin-top:8px;
-      background:#eee;
-      border:none;
-      border-radius:8px;
-      padding:6px 10px;
-      cursor:pointer;
-      font-weight:700
-    }
-    .helper-btn{
-      margin-top:8px;
-      background:#fff;
-      border:1px solid #ddd;
-      border-radius:8px;
-      padding:6px 10px;
-      cursor:pointer;
-      font-weight:700
-    }
-    .inline-note{font-size:.9em;color:var(--secondary-text);margin-top:6px}
-
-    .faq-list{display:flex;flex-direction:column;gap:10px}
-    .faq-item{
-      background:#fafafa;
-      border:1px solid #eee;
-      border-radius:10px;
-      padding:10px 12px;
-      cursor:pointer;
-      font-weight:700;
-      transition:transform .15s, background .15s, border-color .15s;
-      user-select:none
-    }
-    .faq-item:hover{
-      transform:translateY(-1px);
-      background:#fefefe;
-      border-color:#e2e2e2
-    }
-
-    .pill{
-      display:inline-block;
-      padding:6px 10px;
-      border:1px solid #ddd;
-      border-radius:999px;
-      margin:4px;
-      cursor:pointer;
-      font-weight:700;
-      background:#fff
-    }
-    .pill.active{background:#B30000;color:#fff;border-color:#B30000}
-    .elig-row{margin:8px 0}
-    .elig-row label{
-      display:block;
-      margin-bottom:6px;
-      font-weight:800;
-      color:#555
-    }
-    .elig-input{
-      padding:8px 10px;
-      border:1px solid #ddd;
-      border-radius:8px;
-      width:100%;
-      max-width:260px;
-      font-family:inherit
-    }
-    .elig-result{
-      margin-top:10px;
-      padding:10px;
-      border-radius:10px;
-      border:1px dashed #ddd;
-      background:#fafafa
-    }
-    .elig-result.ok{border-color:#3fb950;background:#f1fff3}
-    .elig-result.bad{border-color:#d73a49;background:#fff5f5}
-    .muted{color:#888}
-
-    .go-map-btn{
-      display:inline-block;
-      margin-top:8px;
-      padding:8px 12px;
-      border-radius:10px;
-      background:linear-gradient(to left,#800020,#B30000);
-      color:#fff;
-      text-decoration:none;
-      font-weight:800;
-      border:none;
-      box-shadow:0 4px 8px rgba(0,0,0,.15);
-      cursor:pointer
-    }
-    .go-map-btn:hover{opacity:.92;transform:translateY(-1px)}
-    .hospital-popup strong{display:block;margin-bottom:6px}
-    .details-label{font-weight:700}
-
-    .map-filters{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      align-items:center;
-      padding:10px;
-      border-top:1px solid #eee;
-      background:#fff
-    }
-    .map-filters input,.map-filters select{
-      padding:8px 10px;
-      border:1px solid #ddd;
-      border-radius:8px;
-      font-family:inherit
-    }
-    .map-filters .counter{font-size:.9em;color:#555;margin-inline-start:auto}
-
-    .urgent-wrapper{
-      margin-top:8px;
-      display:flex;
-      flex-direction:column;
-      gap:10px
-    }
-    .urgent-card{
-      border-radius:10px;
-      padding:12px 14px;
-      background:#fff4f4;
-      border:1px solid #f1c0c0;
-      cursor:pointer;
-      transition:transform .15s, box-shadow .15s
-    }
-    .urgent-card:hover{
-      transform:translateY(-1px);
-      box-shadow:var(--shadow-subtle)
-    }
-    .urgent-card .title{font-weight:800;margin-bottom:4px}
-    .urgent-card .badge{
-      display:inline-block;
-      padding:2px 8px;
-      border-radius:999px;
-      font-size:.8em;
-      margin-bottom:6px;
-      color:#fff
-    }
-    .urgent-card.critical{border-color:#DC3545;background:#ffe6e9}
-    .urgent-card.critical .badge{background:#DC3545}
-    .urgent-card.high{border-color:#FFC107;background:#fff8e1}
-    .urgent-card.high .badge{background:#FFC107;color:#000}
-    .urgent-card.normal{border-color:#17A2B8;background:#e5f8ff}
-    .urgent-card.normal .badge{background:#17A2B8}
-
-    @media (max-width: 900px){
-      .main-wrapper{
-        flex-direction:column;
-        height:auto
-      }
-      .chat-container{
-        height:auto;
-        min-height:500px
-      }
-    }
   </style>
 </head>
-<body>
+<body class="rtl">
 
   <div class="main-wrapper">
     <div class="chat-container">
+
+      <!-- =======================
+           الهيدر + زر تغيير اللغة
+      ======================== -->
       <header>
         <div class="header-top">
           <h1 id="header-title">محادثة مع زمرة <span class="blood-drop">🩸</span></h1>
-          <button id="lang-toggle" class="lang-toggle-btn">English</button>
+
+          <button id="lang-toggle" class="lang-toggle-btn">
+            English
+          </button>
         </div>
       </header>
 
+      <!-- =======================
+           صندوق المحادثة الرئيسي
+      ======================== -->
       <div id="chat-box">
+
+        <!-- رسالة الترحيب -->
         <div class="message bot-message" id="welcome-message">
-          <div class="welcome-main">
-            أهلاً بك في <strong style="color:var(--primary-red);font-weight:800;">زمرة</strong> — ابدأ بسؤال عن <strong>شروط الأهلية</strong>.
+
+          <div class="welcome-main" id="welcome-main-text">
+            أهلاً بك في <strong style="color:var(--primary-red);font-weight:800;">زمرة</strong>
+            — ابدأ بسؤال عن <strong>شروط الأهلية</strong>.
           </div>
+
+          <!-- قسم الترجمة -->
           <div class="translation-block">
-            <button class="toggle-btn" onclick="toggleNext(this)">Show English translation</button>
-            <div class="ar-translation" style="display:none;margin-top:6px;direction:ltr;text-align:left;">
-              Welcome to <strong style="color:#B30000;font-weight:800;">Zomrah</strong> — start by asking about <strong>donation eligibility</strong>.
+            <button class="toggle-btn" onclick="toggleNext(this)">
+              Show English translation
+            </button>
+
+            <div class="ar-translation"
+                 style="display:none;margin-top:6px;direction:ltr;text-align:left;">
+              Welcome to <strong style="color:#B30000;font-weight:800;">Zomrah</strong>
+              — start by asking about <strong>donation eligibility</strong>.
             </div>
           </div>
+
         </div>
       </div>
 
+      <!-- =======================
+           منطقة الإدخال
+      ======================== -->
       <div class="input-area">
         <button id="mic-btn" type="button" title="إرسال صوتي">
           <i class="fas fa-microphone"></i>
         </button>
+
         <input type="file" id="audio-input" accept="audio/*" style="display:none" />
-        <input type="text" id="user-input" placeholder="اكتب سؤالك هنا..." autofocus/>
+
+        <input type="text" id="user-input" placeholder="اكتب سؤالك هنا..." autofocus />
+
         <button id="send-btn">إرسال</button>
       </div>
-    </div>
 
+    </div> <!-- نهاية chat-container -->
+    <!-- =======================
+         القسم الجانبي (Sidebar)
+    ======================== -->
     <div class="sidebar-container">
-      <div class="sidebar-box map-widget" style="padding:0;overflow:hidden;border-radius:12px;">
+
+      <!-- خريطة جدة -->
+      <div class="sidebar-box map-widget"
+           style="padding:0;overflow:hidden;border-radius:12px;">
+
         <div id="mapid" style="height:220px;"></div>
-        <button class="sidebar-btn hospital" id="locate-center-btn" style="border-radius:0;margin:0;width:100%;">
+
+        <button class="sidebar-btn hospital"
+                id="locate-center-btn"
+                style="border-radius:0;margin:0;width:100%;">
           <i class="fas fa-map-pin icon" style="font-size:1.4em;"></i>
           <span class="label" id="locate-center-label">حدد موقعي وأظهر المراكز</span>
         </button>
 
+        <!-- فلاتر الخريطة -->
         <div class="map-filters">
-          <input id="map-search" type="text" placeholder="ابحث باسم المستشفى أو الحي..." />
+          <input id="map-search" type="text"
+                 placeholder="ابحث باسم المستشفى أو الحي..." />
+
           <select id="map-sector">
             <option value="">القطاع: الكل</option>
             <option value="public">حكومي فقط</option>
             <option value="private">خاص فقط</option>
           </select>
+
           <button id="map-apply" class="helper-btn">تطبيق</button>
           <button id="map-reset" class="helper-btn">إعادة تعيين</button>
+
           <button id="map-nearest" class="go-map-btn">أقرب مركز الآن</button>
+
           <div class="counter" id="map-counter">—</div>
         </div>
+
       </div>
 
+      <!-- الاحتياج العاجل -->
       <button class="sidebar-btn urgent" id="urgent-needs-btn">
         <i class="fas fa-exclamation-triangle icon"></i>
         <span class="label" id="urgent-label">الاحتياج العاجل للدم</span>
       </button>
 
+      <!-- فحص الأهلية -->
       <button class="sidebar-btn map" id="eligibility-flow-btn">
         <i class="fas fa-clipboard-check icon"></i>
         <span class="label" id="eligibility-label">فحص الأهلية</span>
       </button>
 
+      <!-- التذكير بموعد التبرع -->
       <button class="sidebar-btn map" id="reminder-btn">
         <i class="fas fa-bell icon"></i>
         <span class="label" id="reminder-label">تذكير بموعد التبرع</span>
       </button>
 
-      <!-- رسالة واتساب ترحيبية بالعربي + الإنجليزي -->
-      <a class="sidebar-btn whatsapp" target="_blank" rel="noopener"
+      <!-- واتساب باللغتين -->
+      <a class="sidebar-btn whatsapp"
+         target="_blank"
+         rel="noopener"
          href="https://wa.me/966504635135?text=أهلاً،%20أود%20الاستفسار%20عن%20خدمة%20زمرة.%0AHello,%20I'd%20like%20to%20ask%20about%20the%20Zomrah%20service.">
+
         <i class="fab fa-whatsapp icon"></i>
-        <span class="label" id="whatsapp-label">تواصل مباشر (واتساب)</span>
+        <span class="label" id="whatsapp-label">
+          تواصل مباشر (واتساب)
+        </span>
       </a>
 
+      <!-- الأسئلة الشائعة -->
       <div class="sidebar-box">
         <h2 id="faq-title">❓ استفسارات شائعة</h2>
+
         <div class="faq-list">
-          <div class="faq-item" id="faq-1" onclick="sendQuickQuestion('ما هي شروط التبرع بالدم؟')">شروط التبرع الأساسية</div>
-          <div class="faq-item" id="faq-2" onclick="sendQuickQuestion('متى أقدر أتبرع مرة أخرى؟')">المدة الفاصلة بين التبرعات</div>
-          <div class="faq-item" id="faq-3" onclick="sendQuickQuestion('هل التبرع بالدم مؤلم؟')">الآثار الجانبية والمخاوف</div>
-          <!-- أسئلة إضافية كما طلبتِ -->
-          <div class="faq-item" id="faq-4" onclick="sendQuickQuestion('ماذا أفعل قبل التبرع بالدم؟')">التحضير قبل التبرع</div>
-          <div class="faq-item" id="faq-5" onclick="sendQuickQuestion('هل أستطيع التبرع إذا عندي مرض مزمن؟')">التبرع مع الأمراض المزمنة</div>
+          <div class="faq-item" id="faq-1"
+               onclick="sendQuickQuestion('ما هي شروط التبرع بالدم؟')">
+            شروط التبرع الأساسية
+          </div>
+
+          <div class="faq-item" id="faq-2"
+               onclick="sendQuickQuestion('متى أقدر أتبرع مرة أخرى؟')">
+            المدة الفاصلة بين التبرعات
+          </div>
+
+          <div class="faq-item" id="faq-3"
+               onclick="sendQuickQuestion('هل التبرع بالدم مؤلم؟')">
+            الآثار الجانبية والمخاوف
+          </div>
+
+          <div class="faq-item" id="faq-4"
+               onclick="sendQuickQuestion('ماذا أفعل قبل التبرع بالدم؟')">
+            التحضير قبل التبرع
+          </div>
+
+          <div class="faq-item" id="faq-5"
+               onclick="sendQuickQuestion('هل أستطيع التبرع إذا عندي مرض مزمن؟')">
+            التبرع مع الأمراض المزمنة
+          </div>
         </div>
+
       </div>
-    </div>
-  </div>
 
-  <script>
-    // =======================
-    // لغة الواجهة (عربي / English)
-    // =======================
-    let CURRENT_LANG = 'ar';
+    </div> <!-- نهاية sidebar-container -->
+<script>
+  // =======================
+  // نظام اللغة + عكس الاتجاه بالكامل
+  // =======================
 
-    function applyLanguage(){
-      document.documentElement.lang = CURRENT_LANG;
-      document.documentElement.dir = (CURRENT_LANG === 'ar') ? 'rtl' : 'ltr';
+  let CURRENT_LANG = "ar";
 
-      const headerTitle = document.getElementById('header-title');
-      if(headerTitle){
-        headerTitle.innerHTML =
-          CURRENT_LANG === 'ar'
-            ? 'محادثة مع زمرة <span class="blood-drop">🩸</span>'
-            : 'Chat with Zomrah <span class="blood-drop">🩸</span>';
-      }
+  function applyLanguage() {
 
-      const langBtn = document.getElementById('lang-toggle');
-      if(langBtn){
-        langBtn.textContent = CURRENT_LANG === 'ar' ? 'English' : 'العربية';
-        langBtn.title = CURRENT_LANG === 'ar'
-          ? 'Switch interface to English'
-          : 'تحويل الواجهة إلى العربية';
-      }
+    // -----------------------
+    // 1) عكس اتجاه الصفحة كلياً
+    // -----------------------
+    document.documentElement.lang = CURRENT_LANG;
+    document.documentElement.dir = CURRENT_LANG === "ar" ? "rtl" : "ltr";
 
-      const input = document.getElementById('user-input');
-      if(input){
-        input.placeholder = CURRENT_LANG === 'ar'
-          ? 'اكتب سؤالك هنا...'
-          : 'Type your question here...';
-      }
-
-      const sendBtn = document.getElementById('send-btn');
-      if(sendBtn){
-        sendBtn.textContent = CURRENT_LANG === 'ar' ? 'إرسال' : 'Send';
-      }
-
-      const locateLbl = document.getElementById('locate-center-label');
-      if(locateLbl){
-        locateLbl.textContent = CURRENT_LANG === 'ar'
-          ? 'حدد موقعي وأظهر المراكز'
-          : 'Locate me and show centers';
-      }
-
-      const urgentLbl = document.getElementById('urgent-label');
-      if(urgentLbl){
-        urgentLbl.textContent = CURRENT_LANG === 'ar'
-          ? 'الاحتياج العاجل للدم'
-          : 'Urgent blood needs';
-      }
-
-      const eligLbl = document.getElementById('eligibility-label');
-      if(eligLbl){
-        eligLbl.textContent = CURRENT_LANG === 'ar'
-          ? 'فحص الأهلية'
-          : 'Check eligibility';
-      }
-
-      const remLbl = document.getElementById('reminder-label');
-      if(remLbl){
-        remLbl.textContent = CURRENT_LANG === 'ar'
-          ? 'تذكير بموعد التبرع'
-          : 'Donation reminder';
-      }
-
-      const waLbl = document.getElementById('whatsapp-label');
-      if(waLbl){
-        waLbl.textContent = CURRENT_LANG === 'ar'
-          ? 'تواصل مباشر (واتساب)'
-          : 'Contact us (WhatsApp)';
-      }
-
-      const faqTitle = document.getElementById('faq-title');
-      if(faqTitle){
-        faqTitle.textContent = CURRENT_LANG === 'ar'
-          ? '❓ استفسارات شائعة'
-          : '❓ Common questions';
-      }
-
-      const faq1 = document.getElementById('faq-1');
-      const faq2 = document.getElementById('faq-2');
-      const faq3 = document.getElementById('faq-3');
-      const faq4 = document.getElementById('faq-4');
-      const faq5 = document.getElementById('faq-5');
-
-      if(faq1){
-        faq1.textContent = CURRENT_LANG === 'ar'
-          ? 'شروط التبرع الأساسية'
-          : 'Basic donation requirements';
-        faq1.setAttribute('onclick',
-          CURRENT_LANG === 'ar'
-            ? "sendQuickQuestion('ما هي شروط التبرع بالدم؟')"
-            : "sendQuickQuestion('What are the conditions for blood donation?')"
-        );
-      }
-      if(faq2){
-        faq2.textContent = CURRENT_LANG === 'ar'
-          ? 'المدة الفاصلة بين التبرعات'
-          : 'Time between donations';
-        faq2.setAttribute('onclick',
-          CURRENT_LANG === 'ar'
-            ? "sendQuickQuestion('متى أقدر أتبرع مرة أخرى؟')"
-            : "sendQuickQuestion('When can I donate again?')"
-        );
-      }
-      if(faq3){
-        faq3.textContent = CURRENT_LANG === 'ar'
-          ? 'الآثار الجانبية والمخاوف'
-          : 'Side effects & concerns';
-        faq3.setAttribute('onclick',
-          CURRENT_LANG === 'ar'
-            ? "sendQuickQuestion('هل التبرع بالدم مؤلم؟')"
-            : "sendQuickQuestion('Is blood donation painful?')"
-        );
-      }
-      if(faq4){
-        faq4.textContent = CURRENT_LANG === 'ar'
-          ? 'التحضير قبل التبرع'
-          : 'How to prepare before donation';
-        faq4.setAttribute('onclick',
-          CURRENT_LANG === 'ar'
-            ? "sendQuickQuestion('ماذا أفعل قبل التبرع بالدم؟')"
-            : "sendQuickQuestion('What should I do before donating blood?')"
-        );
-      }
-      if(faq5){
-        faq5.textContent = CURRENT_LANG === 'ar'
-          ? 'التبرع مع الأمراض المزمنة'
-          : 'Donation with chronic diseases';
-        faq5.setAttribute('onclick',
-          CURRENT_LANG === 'ar'
-            ? "sendQuickQuestion('هل أستطيع التبرع إذا عندي مرض مزمن؟')"
-            : "sendQuickQuestion('Can I donate if I have a chronic disease?')"
-        );
-      }
-
-      const mapSearch = document.getElementById('map-search');
-      if(mapSearch){
-        mapSearch.placeholder = CURRENT_LANG === 'ar'
-          ? 'ابحث باسم المستشفى أو الحي...'
-          : 'Search by hospital or district...';
-      }
-
-      const sectorSelect = document.getElementById('map-sector');
-      if(sectorSelect && sectorSelect.options.length >= 3){
-        if(CURRENT_LANG === 'ar'){
-          sectorSelect.options[0].text = 'القطاع: الكل';
-          sectorSelect.options[1].text = 'حكومي فقط';
-          sectorSelect.options[2].text = 'خاص فقط';
-        }else{
-          sectorSelect.options[0].text = 'Sector: All';
-          sectorSelect.options[1].text = 'Public only';
-          sectorSelect.options[2].text = 'Private only';
-        }
-      }
-
-      const mapApply = document.getElementById('map-apply');
-      if(mapApply){
-        mapApply.textContent = CURRENT_LANG === 'ar' ? 'تطبيق' : 'Apply';
-      }
-      const mapReset = document.getElementById('map-reset');
-      if(mapReset){
-        mapReset.textContent = CURRENT_LANG === 'ar' ? 'إعادة تعيين' : 'Reset';
-      }
-      const mapNearest = document.getElementById('map-nearest');
-      if(mapNearest){
-        mapNearest.textContent = CURRENT_LANG === 'ar' ? 'أقرب مركز الآن' : 'Nearest center now';
-      }
-
-      // رسالة الترحيب نفسها (أول رسالة)
-      const welcome = document.getElementById('welcome-message');
-      if(welcome){
-        const mainDiv = welcome.querySelector('.welcome-main');
-        const transBtn = welcome.querySelector('.translation-block .toggle-btn');
-        const transDiv = welcome.querySelector('.translation-block .ar-translation');
-
-        if(mainDiv){
-          mainDiv.innerHTML = (CURRENT_LANG === 'ar')
-            ? 'أهلاً بك في <strong style="color:var(--primary-red);font-weight:800;">زمرة</strong> — ابدأ بسؤال عن <strong>شروط الأهلية</strong>.'
-            : 'Welcome to <strong style="color:#B30000;font-weight:800;">Zomrah</strong> — start by asking about <strong>donation eligibility</strong>.';
-        }
-        if(transBtn && transDiv){
-          if(CURRENT_LANG === 'ar'){
-            transBtn.textContent = 'Show English translation';
-            transDiv.style.direction = 'ltr';
-            transDiv.style.textAlign = 'left';
-            transDiv.innerHTML =
-              'Welcome to <strong style="color:#B30000;font-weight:800;">Zomrah</strong> — start by asking about <strong>donation eligibility</strong>.';
-          }else{
-            transBtn.textContent = 'إظهار الترجمة بالعربية';
-            transDiv.style.direction = 'rtl';
-            transDiv.style.textAlign = 'right';
-            transDiv.innerHTML =
-              'أهلاً بك في <strong style="color:var(--primary-red);font-weight:800;">زمرة</strong> — ابدأ بسؤال عن <strong>شروط الأهلية</strong>.';
-          }
-        }
-      }
+    const body = document.body;
+    if (CURRENT_LANG === "ar") {
+      body.classList.remove("ltr");
+      body.classList.add("rtl");
+    } else {
+      body.classList.remove("rtl");
+      body.classList.add("ltr");
     }
 
-    document.addEventListener('DOMContentLoaded', function(){
-      const langBtn = document.getElementById('lang-toggle');
-      if(langBtn){
-        langBtn.addEventListener('click', function(){
-          CURRENT_LANG = (CURRENT_LANG === 'ar') ? 'en' : 'ar';
-          applyLanguage();
-        });
-      }
-      applyLanguage();
-    });
-
-    // =======================
-    // باقي الكود (مع تمرير CURRENT_LANG للباك-إند)
-    // =======================
-
-    let SMTP_READY = false;
-    let SENDGRID_READY = false;
-    fetch('/health')
-      .then(r=>r.json())
-      .then(j=>{
-        SMTP_READY = !!j.smtp_ready;
-        SENDGRID_READY = !!j.sendgrid_ready;
-      })
-      .catch(()=>{ SMTP_READY = false; SENDGRID_READY = false; });
-
-    function toggleNext(btn){
-      var el = btn.nextElementSibling;
-      if(!el) return;
-      var shown = el.style.display !== 'none';
-      el.style.display = shown ? 'none' : 'block';
-      if(CURRENT_LANG === 'ar'){
-        btn.textContent = shown ? 'Show English translation' : 'Hide English translation';
-      }else{
-        btn.textContent = shown ? 'إظهار الترجمة بالعربية' : 'إخفاء الترجمة بالعربية';
-      }
+    // -----------------------
+    // 2) تحديث عنوان الصفحة
+    
+    const headerTitle = document.getElementById("header-title");
+    if (headerTitle) {
+      headerTitle.innerHTML =
+        CURRENT_LANG === "ar"
+          ? 'محادثة مع زمرة <span class="blood-drop">🩸</span>'
+          : 'Chat with Zomrah <span class="blood-drop">🩸</span>';
     }
 
-    function showLoading(){
-      var chatBox = document.getElementById('chat-box');
-      var loadingDiv = document.createElement('div');
-      loadingDiv.className = 'message bot-message loading-message';
-      loadingDiv.id = 'loading-indicator';
-      loadingDiv.textContent = (CURRENT_LANG === 'ar')
-        ? 'زمرة تكتب... 🧠'
-        : 'Zomrah is typing... 🧠';
-      chatBox.appendChild(loadingDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-      return loadingDiv;
-    }
-    function removeLoading(loadingDiv){ if(loadingDiv && loadingDiv.parentNode){ loadingDiv.parentNode.removeChild(loadingDiv); } }
-    function displayMessage(text, sender){
-      var chatBox = document.getElementById('chat-box');
-      var msgDiv = document.createElement('div');
-      msgDiv.className = 'message ' + (sender === 'user' ? 'user-message' : 'bot-message');
-      msgDiv.textContent = text;
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
-    }
-    function displayError(text){
-      var chatBox = document.getElementById('chat-box');
-      var msgDiv = document.createElement('div');
-      msgDiv.className = 'message bot-message';
-      msgDiv.innerHTML = '<span class="error-message">'+ text +'</span>';
-      chatBox.appendChild(msgDiv);
-      chatBox.scrollTop = chatBox.scrollHeight;
+    // -----------------------
+    // 3) زر تغيير اللغة
+    // -----------------------
+    const langBtn = document.getElementById("lang-toggle");
+    if (langBtn) {
+      langBtn.textContent = CURRENT_LANG === "ar" ? "English" : "العربية";
+      langBtn.title =
+        CURRENT_LANG === "ar"
+          ? "Switch interface to English"
+          : "تحويل الواجهة إلى العربية";
     }
 
-    function displayAnswerWithControls(summarizedText, originalQuestion){
-      var cb = document.getElementById('chat-box');
-      var m = document.createElement('div');
-      m.className = 'message bot-message';
-
-      var main = document.createElement('div');
-      main.className = 'ar-text';
-      main.innerHTML = (summarizedText || '').replace(/\n/g,'<br>');
-      m.appendChild(main);
-
-      var btn = document.createElement('button');
-      btn.className = 'helper-btn';
-      btn.textContent = (CURRENT_LANG === 'ar' ? 'تفاصيل أكثر' : 'More details');
-      btn.dataset.state = 'collapsed';
-      btn.dataset.summarized = summarizedText || '';
-      btn.dataset.question = originalQuestion || '';
-      m.appendChild(btn);
-
-      var tr = document.createElement('div');
-      tr.className = 'translation-block';
-      var toggleLabel = (CURRENT_LANG === 'ar')
-        ? 'Show English translation'
-        : 'إظهار الترجمة بالعربية';
-      tr.innerHTML =
-        '<button class="toggle-btn" onclick="toggleNext(this)">'+toggleLabel+'</button>'+
-        '<div class="ar-translation" style="display:none;margin-top:6px;direction:ltr;text-align:left;">(Translation appears here if implemented)</div>';
-      m.appendChild(tr);
-
-      btn.addEventListener('click', async function(){
-        if (this.dataset.state === 'collapsed') {
-          if (!this.dataset.detailed) {
-            try{
-              const res = await fetch('/api/chat', {
-                method:'POST',
-                headers:{'Content-Type':'application/json'},
-                body: JSON.stringify({ message: this.dataset.question || '', detail: true, lang: CURRENT_LANG })
-              });
-              if(!res.ok) throw new Error('HTTP '+res.status);
-              const j = await res.json();
-              this.dataset.detailed = j.answer || this.dataset.summarized;
-            }catch(e){
-              displayError(CURRENT_LANG === 'ar'
-                ? '❌ فشل جلب التفاصيل.'
-                : '❌ Failed to fetch details.');
-              return;
-            }
-          }
-          main.innerHTML = (this.dataset.detailed || '').replace(/\n/g,'<br>');
-          this.textContent = (CURRENT_LANG === 'ar' ? 'إظهار أقل' : 'Show less');
-          this.dataset.state = 'expanded';
-        } else {
-          main.innerHTML = (this.dataset.summarized || '').replace(/\n/g,'<br>');
-          this.textContent = (CURRENT_LANG === 'ar' ? 'تفاصيل أكثر' : 'More details');
-          this.dataset.state = 'collapsed';
-        }
-      });
-
-      cb.appendChild(m);
-      cb.scrollTop = cb.scrollHeight;
+    // -----------------------
+    // 4) الحقول و الأزرار
+    // -----------------------
+    const input = document.getElementById("user-input");
+    if (input) {
+      input.placeholder =
+        CURRENT_LANG === "ar"
+          ? "اكتب سؤالك هنا..."
+          : "Type your question here...";
     }
 
-    function setInteractionState(enabled){
-      ['send-btn','user-input','urgent-needs-btn','locate-center-btn','eligibility-flow-btn','reminder-btn','mic-btn'].forEach(function(id){
-        var el = document.getElementById(id);
-        if(el){ el.disabled = !enabled; }
-      });
-      var faq = document.querySelectorAll('.faq-item');
-      for(var i=0;i<faq.length;i++){
-        faq[i].style.pointerEvents = enabled ? 'auto' : 'none';
-        faq[i].style.opacity = enabled ? '1' : '0.6';
-        faq[i].style.cursor = enabled ? 'pointer' : 'default';
-      }
+    const sendBtn = document.getElementById("send-btn");
+    if (sendBtn) {
+      sendBtn.textContent = CURRENT_LANG === "ar" ? "إرسال" : "Send";
     }
 
-    const LOCATION_RE = /(موقع|الموقع|أقرب|قريب|الخرائط|الخريطة|map|nearest|location|directions|وين|اقرب)/i;
-    function isLocationIntent(t){ return LOCATION_RE.test((t||'').trim()); }
-
-    var JEDDAH_LAT = 21.5433, JEDDAH_LNG = 39.1728, DEFAULT_ZOOM = 11;
-    var BLOOD_CENTERS = [];
-    var FILTERED_CENTERS = [];
-    var markersLayer = null;
-
-    function toRad(v){ return v*Math.PI/180; }
-    function haversine(lat1,lng1,lat2,lng2){
-      const R=6371;
-      const dLat=toRad(lat2-lat1), dLng=toRad(lng2-lng1);
-      const a=Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
-      return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-    }
-    function gmapsDirections(fromLat,fromLng,toLat,toLng){
-      return 'https://www.google.com/maps/dir/?api=1&origin='+fromLat+','+fromLng+'&destination='+toLat+','+toLng+'&travelmode=driving';
-    }
-    function gmapsLinkByName(name){ return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(name); }
-
-    function findNearest(from){
-      var best=null, bestD=1e9;
-      for(var i=0;i<FILTERED_CENTERS.length;i++){
-        var c=FILTERED_CENTERS[i];
-        var d=haversine(from[0],from[1],c.lat,c.lng);
-        if(d<bestD){ bestD=d; best=c; }
-      }
-      return best;
+    const locateLbl = document.getElementById("locate-center-label");
+    if (locateLbl) {
+      locateLbl.textContent =
+        CURRENT_LANG === "ar"
+          ? "حدد موقعي وأظهر المراكز"
+          : "Locate me and show centers";
     }
 
-    function detectSector(name=''){
-      const t = (name||'').trim();
-      const pub = /(الملك|التخصصي|العام|الجامعة|القوات|الحرس|مجمع|مدينة الملك|الثغر|العزيزية)/;
-      const pri = /(الدكتور|فقيه|السعودي الألماني|الأطباء المتحدون|السلامة|المغربي|الحياة|الطبي الدولي|المركز الطبي الدولي|السعودي الالماني)/;
-      if (pub.test(t)) return 'public';
-      if (pri.test(t)) return 'private';
-      return '';
+    const urgentLbl = document.getElementById("urgent-label");
+    if (urgentLbl) {
+      urgentLbl.textContent =
+        CURRENT_LANG === "ar"
+          ? "الاحتياج العاجل للدم"
+          : "Urgent blood needs";
     }
 
-    function createPopupContent(c){
-      var link = gmapsLinkByName(c.name);
-      var phoneHtml = c.phone ? ('<p><span class="details-label">📞 التواصل:</span> <a href="tel:'+c.phone+'" style="color:#0b7dda">'+c.phone+'</a></p>') : '<p><span class="details-label">📞 التواصل:</span> —</p>';
-      var hoursLabel = (CURRENT_LANG === 'ar') ? '⏱️ ساعات العمل:' : '⏱️ Working hours:';
-      var addrLabel  = (CURRENT_LANG === 'ar') ? '📍 العنوان:'      : '📍 Address:';
-      var btnLabel   = (CURRENT_LANG === 'ar') ? 'اضغط للتوجيه'     : 'Open directions';
-      var hoursHtml = '<p><span class="details-label">'+hoursLabel+'</span> '+(c.hours||'—')+'</p>';
-      return ''+
-        '<div class="hospital-popup">'+
-          '<strong><i class="fas fa-hospital-alt"></i> '+ c.name +'</strong>'+
-          '<p><span class="details-label">'+addrLabel+'</span> '+ (c.address||'—') +'</p>'+
-            hoursHtml + phoneHtml +
-          '<a class="go-map-btn" href="'+ link +'" target="_blank" rel="noopener"><i class="fas fa-route"></i> '+btnLabel+'</a>'+
-        '</div>';
+    const eligLbl = document.getElementById("eligibility-label");
+    if (eligLbl) {
+      eligLbl.textContent =
+        CURRENT_LANG === "ar" ? "فحص الأهلية" : "Check eligibility";
     }
 
-    var map = L.map('mapid').setView([JEDDAH_LAT, JEDDAH_LNG], DEFAULT_ZOOM);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap contributors'}).addTo(map);
-    var redMarker = L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',iconSize:[25,41],iconAnchor:[12,41],popupAnchor:[1,-34],shadowSize:[41,41]});
-    var blueMarker = L.icon({iconUrl:'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',shadowUrl:'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',iconSize:[25,41],iconAnchor:[12,41],popupAnchor:[1,-34],shadowSize:[41,41]});
-
-    function renderCenters(list){
-      if (markersLayer){ markersLayer.clearLayers(); map.removeLayer(markersLayer); }
-      markersLayer = L.layerGroup();
-      (list||[]).forEach(function(c){
-        L.marker([c.lat,c.lng],{icon:redMarker}).bindPopup(createPopupContent(c)).addTo(markersLayer);
-      });
-      markersLayer.addTo(map);
-      document.getElementById('map-counter').textContent = list.length
-        ? (CURRENT_LANG === 'ar' ? (list.length + ' نتيجة') : (list.length + ' result(s)'))
-        : (CURRENT_LANG === 'ar' ? 'لا توجد نتائج' : 'No results');
+    const remLbl = document.getElementById("reminder-label");
+    if (remLbl) {
+      remLbl.textContent =
+        CURRENT_LANG === "ar" ? "تذكير بموعد التبرع" : "Donation reminder";
     }
 
-    fetch('/static/centers_jeddah.json')
-      .then(r=>r.json())
-      .then(list=>{
-        BLOOD_CENTERS = list.map(c=>{
-          if (!c.sector){ c.sector = (c.type || detectSector(c.name)); }
-          return c;
-        });
-        FILTERED_CENTERS = BLOOD_CENTERS.slice();
-        renderCenters(FILTERED_CENTERS);
-      })
-      .catch(()=>{ displayError(CURRENT_LANG === 'ar'
-        ? 'تعذّر تحميل قائمة المراكز.'
-        : 'Failed to load centers list.'
-      ); });
-
-    var userLocation = null;
-
-    document.getElementById('locate-center-btn').addEventListener('click', function(){
-      var btn = document.getElementById('locate-center-btn');
-      var lbl = document.getElementById('locate-center-label');
-      if(lbl){
-        lbl.innerText = (CURRENT_LANG === 'ar')
-          ? 'جاري تحديد موقعك...'
-          : 'Detecting your location...';
-      }
-      btn.disabled = true;
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(function(pos){
-          var userLat = pos.coords.latitude, userLng = pos.coords.longitude;
-          userLocation = [userLat, userLng];
-          L.marker(userLocation,{icon:blueMarker}).addTo(map).bindPopup(
-            (CURRENT_LANG === 'ar') ? 'موقعك الحالي' : 'Your location'
-          ).openPopup();
-          map.setView(userLocation, 13);
-          if(lbl){
-            lbl.innerText = (CURRENT_LANG === 'ar')
-              ? 'تم التحديد بنجاح'
-              : 'Location detected';
-          }
-          btn.disabled = false;
-          displayMessage(
-            (CURRENT_LANG === 'ar')
-              ? '📍 تم تحديد موقعك.'
-              : '📍 Your location has been detected.',
-            'bot'
-          );
-        }, function(){
-          if(lbl){
-            lbl.innerText = (CURRENT_LANG === 'ar')
-              ? 'فشل تحديد الموقع (عرض جدة)'
-              : 'Failed to detect location (showing Jeddah)';
-          }
-          btn.disabled = false;
-          displayError(
-            (CURRENT_LANG === 'ar')
-              ? '⚠️ فشل تحديد الموقع التلقائي. يرجى منح الإذن للمتصفح.'
-              : '⚠️ Failed to detect your location. Please allow location access.'
-          );
-        }, {enableHighAccuracy:true,timeout:10000,maximumAge:0});
-      }else{
-        if(lbl){
-          lbl.innerText = (CURRENT_LANG === 'ar')
-            ? 'متصفحك لا يدعم تحديد الموقع'
-            : 'Your browser does not support geolocation';
-        }
-        btn.disabled = false;
-        displayError(
-          (CURRENT_LANG === 'ar')
-            ? '❌ متصفحك لا يدعم خاصية تحديد الموقع الجغرافي.'
-            : '❌ Your browser does not support geolocation.'
-        );
-      }
-    });
-
-    function openNearestAuto(){
-      function go(fromLat, fromLng){
-        if (!FILTERED_CENTERS.length){
-          displayError(CURRENT_LANG === 'ar'
-            ? 'لا توجد مراكز مطابقة حاليًا.'
-            : 'No matching centers at the moment.');
-          return;
-        }
-        var n = findNearest([fromLat, fromLng]); if(!n) return;
-        var url = gmapsDirections(fromLat,fromLng,n.lat,n.lng);
-        window.location.href = url;
-      }
-      if(userLocation){ return go(userLocation[0], userLocation[1]); }
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(function(pos){ go(pos.coords.latitude,pos.coords.longitude); },
-          function(){ displayError(CURRENT_LANG === 'ar'
-            ? 'اسمح بالوصول للموقع لفتح أقرب مركز.'
-            : 'Allow location access to open the nearest center.'
-          ); },
-          {enableHighAccuracy:true,timeout:8000});
-      }
+    const waLbl = document.getElementById("whatsapp-label");
+    if (waLbl) {
+      waLbl.textContent =
+        CURRENT_LANG === "ar" ? "تواصل مباشر (واتساب)" : "Contact us (WhatsApp)";
     }
 
-    document.getElementById('map-nearest').addEventListener('click', function(){
-      function go(fromLat, fromLng){
-        if (!FILTERED_CENTERS || !FILTERED_CENTERS.length){
-          displayError(CURRENT_LANG === 'ar'
-            ? 'لا توجد مراكز مطابقة حاليا. أعد التعيين أو وسّع البحث.'
-            : 'No matching centers. Reset or broaden your filters.');
-          return;
-        }
-        var n = findNearest([fromLat, fromLng]);
-        if(!n){
-          displayError(CURRENT_LANG === 'ar'
-            ? 'تعذّر تحديد أقرب مركز.'
-            : 'Could not determine the nearest center.');
-          return;
-        }
-        var url = gmapsDirections(fromLat, fromLng, n.lat, n.lng);
-        window.location.href = url;
-      }
-      if (userLocation){
-        go(userLocation[0], userLocation[1]);
-      } else if (navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(
-          function(pos){ go(pos.coords.latitude, pos.coords.longitude); },
-          function(){ displayError(CURRENT_LANG === 'ar'
-            ? 'اسمح للمتصفح بالوصول لموقعك لاستخدام أقرب مركز.'
-            : 'Allow your browser to access location to use nearest center.'
-          ); },
-          {enableHighAccuracy:true,timeout:8000}
-        );
-      } else {
-        displayError(
-          (CURRENT_LANG === 'ar')
-            ? 'متصفحك لا يدعم تحديد الموقع الجغرافي.'
-            : 'Your browser does not support geolocation.'
-        );
-      }
-    });
-
-    function normalize(s){ return (s||'').toLowerCase().replace(/\s+/g,' ').trim(); }
-    function applyMapFilters(){
-      const q = normalize(document.getElementById('map-search').value);
-      const sector = document.getElementById('map-sector').value;
-      FILTERED_CENTERS = BLOOD_CENTERS.filter(c=>{
-        const hay = normalize((c.name||'')+' '+(c.address||''));
-        const matchText = !q || hay.indexOf(q) !== -1;
-        const s = (c.sector||'').toLowerCase();
-        const matchSector = !sector || s === sector;
-        return matchText && matchSector;
-      });
-      renderCenters(FILTERED_CENTERS);
-      if (FILTERED_CENTERS.length){
-        const avgLat = FILTERED_CENTERS.reduce((a,c)=>a+c.lat,0)/FILTERED_CENTERS.length;
-        const avgLng = FILTERED_CENTERS.reduce((a,c)=>a+c.lng,0)/FILTERED_CENTERS.length;
-        map.setView([avgLat,avgLng], 12);
-      }
+    // -----------------------
+    // 5) تحديث عنوان الأسئلة الشائعة
+    // -----------------------
+    const faqTitle = document.getElementById("faq-title");
+    if (faqTitle) {
+      faqTitle.textContent =
+        CURRENT_LANG === "ar" ? "❓ استفسارات شائعة" : "❓ Common questions";
     }
-    document.getElementById('map-apply').addEventListener('click', applyMapFilters);
-    document.getElementById('map-reset').addEventListener('click', function(){
-      document.getElementById('map-search').value='';
-      document.getElementById('map-sector').value='';
-      FILTERED_CENTERS = BLOOD_CENTERS.slice();
-      renderCenters(FILTERED_CENTERS);
-      map.setView([JEDDAH_LAT, JEDDAH_LNG], DEFAULT_ZOOM);
-    });
-    document.getElementById('map-search').addEventListener('keydown', function(e){
-      if(e.key==='Enter'){ applyMapFilters(); }
-    });
-    document.getElementById('map-sector').addEventListener('change', applyMapFilters);
 
-    function emailValid(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(e||'').trim()); }
-    function addReminderFallbackUI(next_date){
-      const cb = document.getElementById('chat-box');
-      const wrap = document.createElement('div');
-      wrap.className = 'message bot-message';
-      const baseText = (CURRENT_LANG === 'ar')
-        ? 'يمكنك أيضًا حفظ الموعد:'
-        : 'You can also save the date:';
-      const msg = encodeURIComponent(
-        (CURRENT_LANG === 'ar'
-          ? `تذكير زمرة: موعد تبرعك المقترح بتاريخ ${next_date}.`
-          : `Zomrah reminder: your suggested donation date is ${next_date}.`
-        )
+    // -----------------------
+    // 6) تحديث أسئلة قائمة FAQ
+    // -----------------------
+
+    function setFAQ(id, ar, en, arQ, enQ) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.textContent = CURRENT_LANG === "ar" ? ar : en;
+      el.setAttribute(
+        "onclick",
+        CURRENT_LANG === "ar"
+          ? `sendQuickQuestion('${arQ}')`
+          : `sendQuickQuestion('${enQ}')`
       );
-      const wa = `https://wa.me/?text=${msg}`;
-      const icsHref = `/api/reminder/ics/${next_date}`;
-      const icsLabel = (CURRENT_LANG === 'ar')
-        ? 'تحميل ملف التقويم (.ics)'
-        : 'Download calendar file (.ics)';
-      const waLabel = (CURRENT_LANG === 'ar')
-        ? 'أرسل التذكير عبر واتساب'
-        : 'Send reminder via WhatsApp';
-      wrap.innerHTML = `
-        <div>${baseText}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;">
-          <a class="go-map-btn" href="${icsHref}" download>${icsLabel}</a>
-          <a class="go-map-btn" href="${wa}" target="_blank" rel="noopener">${waLabel}</a>
-        </div>
-      `;
-      cb.appendChild(wrap);
-      cb.scrollTop = cb.scrollHeight;
     }
 
-    var lastUserRaw = '';
-    document.getElementById('user-input').addEventListener('keydown', function(e){
-      if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('send-btn').click(); }
-    });
-    document.getElementById('send-btn').addEventListener('click', async function(){
-      var inputField = document.getElementById('user-input');
-      var rawMessage = (inputField.value||'').trim();
-      if(!rawMessage) return;
-      inputField.value = '';
-      lastUserRaw = rawMessage;
+    setFAQ("faq-1", "شروط التبرع الأساسية", "Basic donation requirements",
+      "ما هي شروط التبرع بالدم؟",
+      "What are the conditions for blood donation?");
 
-      var loadingDiv = null, data = null;
-      try{
-        setInteractionState(false); loadingDiv = showLoading();
-        var res = await fetch('/api/chat',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({message:rawMessage, lang: CURRENT_LANG})
-        });
-        if(!res.ok) throw new Error('خطأ في الخادم: '+res.status+' '+res.statusText);
-        data = await res.json();
-      }catch(err){
-        displayError(
-          (CURRENT_LANG === 'ar')
-            ? ('❌ فشل الاتصال: ' + err.message + '. تأكد من أن خادم Flask يعمل.')
-            : ('❌ Connection failed: ' + err.message + '. Check that the Flask server is running.')
-        );
-        removeLoading(loadingDiv); setInteractionState(true); return;
-      }finally{
-        removeLoading(loadingDiv); setInteractionState(true);
-      }
+    setFAQ("faq-2", "المدة الفاصلة بين التبرعات", "Time between donations",
+      "متى أقدر أتبرع مرة أخرى؟",
+      "When can I donate again?");
 
-      if (data) {
-        // نتحقق من الرد من الباك إند (رسالة عدم الفهم من جهة الفرونت لو الرد فاضي/قصير)
-        var answerText = (data.answer || '').trim();
+    setFAQ("faq-3", "الآثار الجانبية والمخاوف", "Side effects & concerns",
+      "هل التبرع بالدم مؤلم؟",
+      "Is blood donation painful?");
 
-        if (!answerText || answerText.length < 10) {
-          var fallbackMsg = (CURRENT_LANG === 'ar')
-            ? 'لم أستطع فهم سؤالك بشكل كامل. حاول أن تكتب سؤالك عن التبرع بالدم بشكل أبسط أو أكثر تحديدًا.'
-            : 'I couldn’t fully understand your question. Please try asking about blood donation in a simpler or more specific way.';
+    setFAQ("faq-4", "التحضير قبل التبرع", "How to prepare before donation",
+      "ماذا أفعل قبل التبرع بالدم؟",
+      "What should I do before donating blood?");
 
-          var finalUserMessageNF = rawMessage;
-          if (CURRENT_LANG === 'ar' && data.corrected_message) {
-            finalUserMessageNF = data.corrected_message;
-          }
+    setFAQ("faq-5", "التبرع مع الأمراض المزمنة", "Donation with chronic diseases",
+      "هل أستطيع التبرع إذا عندي مرض مزمن؟",
+      "Can I donate if I have a chronic disease?");
 
-          displayMessage(finalUserMessageNF, 'user');
-          displayMessage(fallbackMsg, 'bot');
+    // -----------------------
+    // 7) رسالة الترحيب
+    // -----------------------
+    const welcome = document.getElementById("welcome-message");
+    if (welcome) {
+      const mainDiv = document.getElementById("welcome-main-text");
+      const transDiv = welcome.querySelector(".ar-translation");
+      const transBtn = welcome.querySelector(".toggle-btn");
 
-          if (isLocationIntent(rawMessage)) {
-            openNearestAuto();
-          }
-          return;
-        }
+      if (CURRENT_LANG === "ar") {
+        mainDiv.innerHTML =
+          'أهلاً بك في <strong style="color:var(--primary-red);font-weight:800;">زمرة</strong> — ابدأ بسؤال عن <strong>شروط الأهلية</strong>.';
 
-        // دائماً نعرض ما كتبه المستخدم (او النسخة المصححة بالعربي)
-        var finalUserMessage = rawMessage;
-        if (CURRENT_LANG === 'ar' && data.corrected_message) {
-          finalUserMessage = data.corrected_message;
-        }
+        transBtn.textContent = "Show English translation";
+        transDiv.style.direction = "ltr";
+        transDiv.style.textAlign = "left";
+        transDiv.innerHTML =
+          'Welcome to <strong style="color:#B30000;font-weight:800;">Zomrah</strong> — start by asking about <strong>donation eligibility</strong>.';
 
-        displayMessage(finalUserMessage, 'user');
-        displayAnswerWithControls(answerText, finalUserMessage);
-
-        if (isLocationIntent(rawMessage)) {
-          openNearestAuto();
-        }
-      }
-
-    });
-
-    function pill(id, group, value, label){
-      return `<span class="pill" id="${id}" data-group="${group}" data-value="${value}">${label}</span>`;
-    }
-
-    function buildEligibilityUI(){
-      const cb = document.getElementById('chat-box');
-      const m = document.createElement('div');
-      m.className = 'message bot-message';
-
-      if (CURRENT_LANG === 'ar') {
-        m.innerHTML = `
-        <div style="font-weight:800;margin-bottom:8px;">نموذج فحص الأهلية</div>
-
-        <div class="elig-row">
-          <label>النوع:</label>
-          ${pill('g-m','gender','male','ذكر')}
-          ${pill('g-f','gender','female','أنثى')}
-        </div>
-
-        <div class="elig-row">
-          <label>العمر (بالسنوات):</label>
-          <input id="age" type="number" class="elig-input" min="1" max="100" placeholder="مثال: 25"/>
-        </div>
-
-        <div class="elig-row">
-          <label>الوزن (كجم):</label>
-          <input id="weight" type="number" class="elig-input" min="30" max="300" placeholder="مثال: 60"/>
-        </div>
-
-        <div class="elig-row">
-          <label>آخر تبرع (بالأيام):</label>
-          <input id="last_donation_days" type="number" class="elig-input" min="0" max="2000" placeholder="مثال: 100"/>
-        </div>
-
-        <div class="elig-row">
-          <label>أدوية سيولة الدم؟</label>
-          ${pill('ac-y','on_ac','yes','نعم')}${pill('ac-n','on_ac','no','لا')}
-        </div>
-
-        <div class="elig-row">
-          <label>مضاد حيوي لعدوى نشطة؟</label>
-          ${pill('ab-y','on_ac2','yes','نعم')}${pill('ab-n','on_ac2','no','لا')}
-        </div>
-
-        <div class="elig-row">
-          <label>أعراض زكام/حمى حاليًا؟</label>
-          ${pill('cold-y','cold','yes','نعم')}${pill('cold-n','cold','no','لا')}
-        </div>
-
-        <div class="elig-row only-female" style="display:none;">
-          <label>هل أنتِ حامل حاليًا؟</label>
-          ${pill('preg-y','pregnant','yes','نعم')}${pill('preg-n','pregnant','no','لا')}
-        </div>
-
-        <div class="elig-row">
-          <label>هل أجريت عملية/قلع أسنان مؤخرًا؟</label>
-          ${pill('proc-y','procedure','yes','نعم')}${pill('proc-n','procedure','no','لا')}
-        </div>
-        <div class="elig-row" id="procedure-days-row" style="display:none;">
-          <label>كم يوم مضى على آخر إجراء/قلع أسنان؟</label>
-          <input id="recent_procedure_days" type="number" class="elig-input" min="0" max="400" placeholder="مثال: 14"/>
-        </div>
-
-        <div class="elig-row">
-          <label>هل لديك وشم/ثقب خلال الفترة الأخيرة؟</label>
-          ${pill('tat-y','tattoo','yes','نعم')}${pill('tat-n','tattoo','no','لا')}
-        </div>
-        <div class="elig-row" id="tattoo-months-row" style="display:none;">
-          <label>قبل كم شهر تقريبًا كان آخر وشم/ثقب؟</label>
-          <input id="tattoo_months" type="number" class="elig-input" min="0" max="48" placeholder="مثال: 6"/>
-        </div>
-
-        <div class="elig-row" style="margin-top:10px;">
-          <button id="elig-submit" class="go-map-btn"><i class="fas fa-check"></i> قيّم الأهلية</button>
-        </div>
-
-        <div id="elig-result" class="elig-result"><span class="muted">أدخل البيانات ثم اضغط "قيّم الأهلية".</span></div>
-      `;
       } else {
-        m.innerHTML = `
-        <div style="font-weight:800;margin-bottom:8px;">Eligibility check form</div>
+        mainDiv.innerHTML =
+          'Welcome to <strong style="color:#B30000;font-weight:800;">Zomrah</strong> — start by asking about <strong>donation eligibility</strong>.';
 
-        <div class="elig-row">
-          <label>Gender:</label>
-          ${pill('g-m','gender','male','Male')}
-          ${pill('g-f','gender','female','Female')}
-        </div>
-
-        <div class="elig-row">
-          <label>Age (years):</label>
-          <input id="age" type="number" class="elig-input" min="1" max="100" placeholder="e.g. 25"/>
-        </div>
-
-        <div class="elig-row">
-          <label>Weight (kg):</label>
-          <input id="weight" type="number" class="elig-input" min="30" max="300" placeholder="e.g. 60"/>
-        </div>
-
-        <div class="elig-row">
-          <label>Last donation (days ago):</label>
-          <input id="last_donation_days" type="number" class="elig-input" min="0" max="2000" placeholder="e.g. 100"/>
-        </div>
-
-        <div class="elig-row">
-          <label>On blood thinners?</label>
-          ${pill('ac-y','on_ac','yes','Yes')}${pill('ac-n','on_ac','no','No')}
-        </div>
-
-        <div class="elig-row">
-          <label>On antibiotics for active infection?</label>
-          ${pill('ab-y','on_ac2','yes','Yes')}${pill('ab-n','on_ac2','no','No')}
-        </div>
-
-        <div class="elig-row">
-          <label>Cold/fever symptoms now?</label>
-          ${pill('cold-y','cold','yes','Yes')}${pill('cold-n','cold','no','No')}
-        </div>
-
-        <div class="elig-row only-female" style="display:none;">
-          <label>Currently pregnant? (for women)</label>
-          ${pill('preg-y','pregnant','yes','Yes')}${pill('preg-n','pregnant','no','No')}
-        </div>
-
-        <div class="elig-row">
-          <label>Recent surgery / tooth removal?</label>
-          ${pill('proc-y','procedure','yes','Yes')}${pill('proc-n','procedure','no','No')}
-        </div>
-        <div class="elig-row" id="procedure-days-row" style="display:none;">
-          <label>How many days ago was the last procedure?</label>
-          <input id="recent_procedure_days" type="number" class="elig-input" min="0" max="400" placeholder="e.g. 14"/>
-        </div>
-
-        <div class="elig-row">
-          <label>Tattoo / piercing recently?</label>
-          ${pill('tat-y','tattoo','yes','Yes')}${pill('tat-n','tattoo','no','No')}
-        </div>
-        <div class="elig-row" id="tattoo-months-row" style="display:none;">
-          <label>Roughly how many months ago?</label>
-          <input id="tattoo_months" type="number" class="elig-input" min="0" max="48" placeholder="e.g. 6"/>
-        </div>
-
-        <div class="elig-row" style="margin-top:10px;">
-          <button id="elig-submit" class="go-map-btn"><i class="fas fa-check"></i> Check eligibility</button>
-        </div>
-
-        <div id="elig-result" class="elig-result"><span class="muted">Fill the form and click "Check eligibility".</span></div>
-      `;
+        transBtn.textContent = "إظهار الترجمة بالعربية";
+        transDiv.style.direction = "rtl";
+        transDiv.style.textAlign = "right";
+        transDiv.innerHTML =
+          'أهلاً بك في <strong style="color:var(--primary-red);font-weight:800;">زمرة</strong> — ابدأ بسؤال عن <strong>شروط الأهلية</strong>.';
       }
-
-      cb.appendChild(m);
-      cb.scrollTop = cb.scrollHeight;
     }
+  }
 
-    document.addEventListener('click', function(e){
-      if (e.target && e.target.classList.contains('pill')) {
-        const g = e.target.dataset.group;
-        document.querySelectorAll('.pill[data-group="'+g+'"]').forEach(p=>p.classList.remove('active'));
-        e.target.classList.add('active');
+  // --------------------------
+  // حدث عند الضغط على زر اللغة
+  // --------------------------
+  document.addEventListener("DOMContentLoaded", function () {
+    const langBtn = document.getElementById("lang-toggle");
+    if (langBtn) {
+      langBtn.addEventListener("click", function () {
+        CURRENT_LANG = CURRENT_LANG === "ar" ? "en" : "ar";
+        applyLanguage();
+      });
+    }
+    applyLanguage();
+  });
 
-        if (g === 'gender') {
-          const v = e.target.dataset.value;
-          const fem = document.querySelector('.only-female');
-          if (fem) fem.style.display = (v === 'female') ? 'block' : 'none';
-        }
+</script>
+/* ====================================================
+     الجزء الخامس — منطق الرسائل + مهلة 5 ثوانٍ
+==================================================== */
 
-        if (g === 'procedure') {
-          const v = e.target.dataset.value;
-          const row = document.getElementById('procedure-days-row');
-          if (row) row.style.display = (v === 'yes') ? 'block' : 'none';
-        }
+async function processChatResponse(rawMessage) {
 
-        if (g === 'tattoo') {
-          const v = e.target.dataset.value;
-          const row = document.getElementById('tattoo-months-row');
-          if (row) row.style.display = (v === 'yes') ? 'block' : 'none';
-        }
-      }
-    });
+    // عرض رسالة المستخدم
+    displayMessage(rawMessage, "user");
 
-    document.getElementById('eligibility-flow-btn').addEventListener('click', function(){
-      buildEligibilityUI();
-    });
+    // عرض رسالة "زمرة تكتب..."
+    let loadingDiv = showLoading();
 
-    document.addEventListener('click', async function(e){
-      if (e.target && e.target.id === 'elig-submit') {
-        const gActive = document.querySelector('.pill[data-group="gender"].active');
-        const g = gActive ? gActive.dataset.value : null;
+    try {
 
-        const age    = parseInt(document.getElementById('age')?.value || '0', 10);
-        const weight = parseInt(document.getElementById('weight')?.value || '0', 10);
-        const last   = parseInt(document.getElementById('last_donation_days')?.value || '9999', 10);
+        // تطبيق مهلة 5 ثوانٍ قبل الرد
+        await new Promise(resolve => setTimeout(resolve, 5000));
 
-        const getYN = (grp)=> {
-          const a = document.querySelector('.pill[data-group="'+grp+'"].active');
-          return a ? (a.dataset.value === 'yes') : false;
-        };
-        const on_ac = getYN('on_ac');
-        const on_ab = getYN('on_ac2');
-        const cold  = getYN('cold');
-        let pregnant = false;
-        if (g === 'female') pregnant = getYN('pregnant');
-
-        const procYes = getYN('procedure');
-        const tattooYes = getYN('tattoo');
-
-        const recent = procYes
-          ? parseInt(document.getElementById('recent_procedure_days')?.value || '0', 10)
-          : 9999;
-
-        const tattoo = tattooYes
-          ? parseInt(document.getElementById('tattoo_months')?.value || '0', 10)
-          : 999;
-
-        const payload = {
-          age, weight, last_donation_days:last,
-          on_anticoagulants:on_ac,
-          on_antibiotics:on_ab,
-          has_cold:cold,
-          pregnant,
-          recent_procedure_days:recent,
-          tattoo_months:tattoo
-        };
-
-        try{
-          const r = await fetch('/api/eligibility/evaluate',{
-            method:'POST', headers:{'Content-Type':'application/json'},
-            body: JSON.stringify(payload)
-          });
-          if(!r.ok) throw new Error('HTTP '+r.status);
-          const j = await r.json();
-          const box = document.getElementById('elig-result');
-          if (!box) return;
-
-          const ok = !!j.eligible;
-          const reasons = j.reasons || [];
-          const nextd = j.next_eligible_date || '-';
-
-          box.className = 'elig-result ' + (ok ? 'ok' : 'bad');
-
-          const title = ok
-            ? (CURRENT_LANG === 'ar' ? '✅ مؤهل للتبرع حالياً' : '✅ Eligible to donate now')
-            : (CURRENT_LANG === 'ar' ? '⛔ غير مؤهل حالياً'      : '⛔ Not currently eligible');
-          const nextLabel = (CURRENT_LANG === 'ar')
-            ? '🗓️ أقرب موعد مناسب: '
-            : '🗓️ Next suitable date: ';
-
-          let html = `
-            <div><strong>${title}</strong></div>
-            <div>${nextLabel}<strong>${nextd}</strong></div>
-          `;
-          if (reasons.length){
-            html += '<ul style="margin:8px 16px 0 0">';
-            reasons.forEach(rsn=>{
-              html += '<li>'+ rsn +'</li>';
-            });
-            html += '</ul>';
-          } else {
-            html += (CURRENT_LANG === 'ar')
-              ? '<div class="muted">لا توجد موانع واضحة.</div>'
-              : '<div class="muted">No clear contraindications.</div>';
-          }
-
-          box.innerHTML = html;
-        }catch(err){
-          displayError(
-            (CURRENT_LANG === 'ar')
-              ? ('تعذّر تقييم الأهلية: '+err.message)
-              : ('Could not evaluate eligibility: '+err.message)
-          );
-        }
-      }
-    });
-
-    document.getElementById('reminder-btn').addEventListener('click', async function(){
-      const who = (prompt(CURRENT_LANG === 'ar'
-        ? 'اسمك (اختياري):'
-        : 'Your name (optional):'
-      ) || 'User').trim();
-      const email = (prompt(CURRENT_LANG === 'ar'
-        ? 'أدخل بريدك الإلكتروني لاستلام التذكير (مثال: name@example.com):'
-        : 'Enter your email to receive a reminder (e.g. name@example.com):'
-      ) || '').trim();
-
-      if (!emailValid(email)){
-        displayError(
-          (CURRENT_LANG === 'ar')
-            ? 'الرجاء إدخال بريد إلكتروني صحيح.'
-            : 'Please enter a valid email address.'
-        );
-        return;
-      }
-
-      try{
-        const r = await fetch('/api/reminder',{
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({user_hint:who, email})
+        // إرسال الطلب للباك-إند
+        const res = await fetch("/api/chat", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                message: rawMessage,
+                lang: CURRENT_LANG
+            })
         });
-        const j = await r.json();
-        if(!j.ok){
-          displayError(
-            (CURRENT_LANG === 'ar')
-              ? 'لم يتم تسجيل التذكير.'
-              : 'Reminder was not saved.'
-          );
-          return;
+
+        if (!res.ok) throw new Error("HTTP " + res.status);
+
+        const data = await res.json();
+        removeLoading(loadingDiv);
+
+        let answerText = (data.answer || "").trim();
+
+        /* ------------------------------------------
+           لو الرد فارغ أو قصير → نستخدم رسالة fallback
+        ------------------------------------------- */
+        if (!answerText || answerText.length < 10) {
+
+            const fallbackPrefix =
+                CURRENT_LANG === "ar"
+                    ? "لم نعثر على إجابة في قاعدة المعرفة؛ استعنا بـ OpenAI لصياغة الرد التالي:"
+                    : "No answer was found in the knowledge base; we used OpenAI to generate the following reply:";
+
+            const fallbackDetail =
+                CURRENT_LANG === "ar"
+                    ? "لم أستطع فهم سؤالك بشكل كامل. حاول كتابته بطريقة أبسط أو أكثر تحديدًا."
+                    : "I couldn't fully understand your question. Please try asking in simpler or more specific words.";
+
+            const footerAI =
+                CURRENT_LANG === "ar"
+                    ? "مُولَّد آليًا • قد يحتوي على أخطاء طفيفة<br>مع تحيات فريق زمرة 🩸"
+                    : "AI-generated • may contain minor errors<br>With regards, Zomrah Team 🩸";
+
+            const finalMessage =
+                `${fallbackPrefix}<br><br>${fallbackDetail}<br><br><span style="font-size:0.85em;color:#666">${footerAI}</span>`;
+
+            displayAnswerWithControls(finalMessage, rawMessage);
+            return;
         }
 
-        if (j.email_status && j.email_status.sent){
-          displayMessage(
-            (CURRENT_LANG === 'ar'
-              ? '📩 تم إرسال تذكير إلى بريدك الإلكتروني. موعدك المقترح: '
-              : '📩 A reminder was sent to your email. Suggested date: '
-            ) + j.next_date,
-            'bot'
-          );
-        } else {
-          const msg = j.email_status && j.email_status.message ? j.email_status.message : 'غير معروف';
-          displayError(
-            (CURRENT_LANG === 'ar'
-              ? ('تعذّر إرسال البريد ('+ msg +').')
-              : ('Failed to send email ('+ msg +').')
-            )
-          );
-          displayMessage(
-            (CURRENT_LANG === 'ar'
-              ? 'يمكنك حفظ الموعد بطرق بديلة أدناه:'
-              : 'You can still save the date using the options below:'
-            ),
-            'bot'
-          );
-        }
+        /* ------------------------------------------
+             لو تم العثور على إجابة من القاعدة
+        ------------------------------------------- */
+        const prefix =
+            CURRENT_LANG === "ar"
+                ? "تم العثور على إجابة في قاعدة المعرفة:"
+                : "An answer was found in the knowledge base:";
 
-        addReminderFallbackUI(j.next_date);
-      }catch(e){
+        const footerAI =
+            CURRENT_LANG === "ar"
+                ? "مُولَّد آليًا • قد يحتوي على أخطاء طفيفة<br>مع تحيات فريق زمرة 🩸"
+                : "AI-generated • may contain minor errors<br>With regards, Zomrah Team 🩸";
+
+        const finalAnswer =
+            `${prefix}<br><br>${answerText}<br><br><span style="font-size:0.85em;color:#666">${footerAI}</span>`;
+
+        displayAnswerWithControls(finalAnswer, rawMessage);
+
+    } catch (err) {
+        removeLoading(loadingDiv);
         displayError(
-          (CURRENT_LANG === 'ar')
-            ? 'خطأ أثناء إضافة التذكير.'
-            : 'Error while creating the reminder.'
+            CURRENT_LANG === "ar"
+                ? "حدث خطأ أثناء معالجة الرد."
+                : "An error occurred while processing the response."
         );
-      }
-    });
+    }
+}
+/* ====================================================
+     الجزء السادس — دعم الرسائل الصوتية بالكامل
+==================================================== */
 
-    document.getElementById('urgent-needs-btn').addEventListener('click', async function(){
-      const cb = document.getElementById('chat-box');
-      const loading = document.createElement('div');
-      loading.className = 'message bot-message loading-message';
-      loading.textContent = (CURRENT_LANG === 'ar')
-        ? 'جاري جلب الاحتياج العاجل من المستشفيات...'
-        : 'Fetching urgent blood needs from hospitals...';
-      cb.appendChild(loading);
-      cb.scrollTop = cb.scrollHeight;
+const micBtn = document.getElementById('mic-btn');
+const audioInput = document.getElementById('audio-input');
 
-      try{
-        const res = await fetch('/api/urgent_needs?lang='+CURRENT_LANG);
-        if(!res.ok) throw new Error('HTTP '+res.status);
-        const j = await res.json();
-        cb.removeChild(loading);
+let mediaRecorder = null;
+let audioChunks = [];
+let isRecording = false;
 
-        const wrap = document.createElement('div');
-        wrap.className = 'message bot-message';
-        let html = `<div style="font-weight:800;margin-bottom:6px;">${
-          CURRENT_LANG === 'ar'
-            ? 'الاحتياج العاجل للدم (جدة وما حولها)'
-            : 'Urgent blood needs (Jeddah & nearby)'
-        }</div>`;
+/* إرسال ملف صوتي للباك-إند */
+async function sendAudioBlob(blob, filename) {
 
-        const note = (CURRENT_LANG === 'ar') ? (j.answer_ar || '') : (j.answer_en || j.answer_ar || '');
-        if(note){
-          html += `<div class="inline-note" style="margin-bottom:8px;">${note}</div>`;
-        }
-        html += `<div class="urgent-wrapper">`;
+    const loading = showLoading();
 
-        (j.needs || []).forEach(n=>{
-          const status = (n.status || '').trim();
-          let cls = 'normal';
-          if (/عاجل|طارئ|مرتفع جداً|critical|urgent/i.test(status)) cls = 'critical';
-          else if (/مرتفع|متوسط|high/i.test(status)) cls = 'high';
+    try {
+        await new Promise(resolve => setTimeout(resolve, 5000)); // مهلة 5 ثوانٍ قبل الرد
 
-          const titlePrefix = '🏥 ';
-          const navBtnLabel = (CURRENT_LANG === 'ar')
-            ? 'التوجيه على الخرائط'
-            : 'Open in Maps';
-
-          html += `
-            <div class="urgent-card ${cls}" data-url="${n.location_url || ''}">
-              <div class="title">${titlePrefix}${n.hospital || (CURRENT_LANG === 'ar' ? 'مستشفى غير معروف' : 'Unknown hospital')}</div>
-              <div class="badge">${n.status || (CURRENT_LANG === 'ar' ? 'حالة غير محددة' : 'Unspecified status')}</div>
-              <div>🔍 ${n.details || (CURRENT_LANG === 'ar' ? 'تفاصيل غير مذكورة' : 'No details provided')}</div>
-              ${n.location_url ? `<div style="margin-top:6px;"><button class="go-map-btn" type="button">${navBtnLabel}</button></div>` : ''}
-            </div>
-          `;
-        });
-        html += `</div>`;
-        wrap.innerHTML = html;
-        cb.appendChild(wrap);
-        cb.scrollTop = cb.scrollHeight;
-
-        wrap.querySelectorAll('.urgent-card').forEach(card=>{
-          const url = card.getAttribute('data-url');
-          if(!url) return;
-          card.addEventListener('click', function(e){
-            if(e.target && e.target.classList.contains('go-map-btn')){
-              window.open(url, '_blank');
-            }else{
-              window.open(url, '_blank');
-            }
-          });
-        });
-      }catch(e){
-        try{ cb.removeChild(loading); }catch(_){}
-        displayError(
-          (CURRENT_LANG === 'ar')
-            ? ('تعذّر جلب بيانات الاحتياج العاجل: '+e.message)
-            : ('Could not fetch urgent needs: '+e.message)
-        );
-      }
-    });
-
-    const micBtn = document.getElementById('mic-btn');
-    const audioInput = document.getElementById('audio-input');
-
-    let mediaRecorder = null;
-    let audioChunks = [];
-    let isRecording = false;
-
-    async function sendAudioBlob(blob, filename) {
-      const loading = showLoading();
-      try {
         const fd = new FormData();
-        fd.append('audio_file', blob, filename || 'recording.webm');
+        fd.append('audio_file', blob, filename);
+
         const res = await fetch('/api/upload_audio', {
-          method:'POST',
-          body: fd
+            method: 'POST',
+            body: fd
         });
-        if (!res.ok) throw new Error('HTTP '+res.status);
-        const j = await res.json();
+
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+
+        const data = await res.json();
         removeLoading(loading);
 
         displayMessage(
-          (CURRENT_LANG === 'ar' ? '🎙️ (رسالة صوتية)' : '🎙️ (voice message)'),
-          'user'
+            CURRENT_LANG === "ar" ? "🎙️ (رسالة صوتية)" : "🎙️ (voice message)",
+            "user"
         );
-        displayAnswerWithControls(j.answer || '', j.corrected_message || j.transcribed_text || '');
-      } catch(e) {
+
+        const footerAI =
+            CURRENT_LANG === "ar"
+                ? "مُولَّد آليًا • قد يحتوي على أخطاء طفيفة<br>مع تحيات فريق زمرة 🩸"
+                : "AI-generated • may contain minor errors<br>With regards, Zomrah Team 🩸";
+
+        const finalText =
+            `${data.answer}<br><br><span style="font-size:0.85em;color:#666">${footerAI}</span>`;
+
+        displayAnswerWithControls(finalText, data.transcribed_text || "");
+
+    } catch (e) {
         removeLoading(loading);
+
         displayError(
-          (CURRENT_LANG === 'ar')
-            ? ('فشل معالجة الصوت: '+e.message)
-            : ('Failed to process audio: '+e.message)
+            CURRENT_LANG === "ar"
+                ? "فشل معالجة الرسالة الصوتية."
+                : "Failed to process audio."
         );
-      }
     }
+}
 
-    micBtn.addEventListener('click', async function(){
-      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+
+/* زر التسجيل الصوتي */
+micBtn.addEventListener('click', async function () {
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+
         if (!isRecording) {
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = e => {
-              if (e.data.size > 0) audioChunks.push(e.data);
-            };
-            mediaRecorder.onstop = () => {
-              const blob = new Blob(audioChunks, { type: 'audio/webm' });
-              sendAudioBlob(blob, 'mic_recording.webm');
-              stream.getTracks().forEach(t => t.stop());
-            };
-            mediaRecorder.start();
-            isRecording = true;
-            micBtn.classList.add('recording');
-            micBtn.title = (CURRENT_LANG === 'ar') ? 'إيقاف التسجيل' : 'Stop recording';
-          } catch (err) {
-            console.error(err);
-            audioInput.click();
-          }
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = e => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                    sendAudioBlob(blob, "mic_recording.webm");
+                    stream.getTracks().forEach(t => t.stop());
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+
+                micBtn.classList.add("recording");
+                micBtn.title = CURRENT_LANG === "ar" ? "إيقاف التسجيل" : "Stop recording";
+
+            } catch (err) {
+                audioInput.click();
+            }
+
         } else {
-          isRecording = false;
-          micBtn.classList.remove('recording');
-          micBtn.title = (CURRENT_LANG === 'ar') ? 'إرسال صوتي' : 'Send audio';
-          if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-            mediaRecorder.stop();
-          }
+            isRecording = false;
+            micBtn.classList.remove("recording");
+            micBtn.title = CURRENT_LANG === "ar" ? "إرسال صوتي" : "Send audio";
+
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
+                mediaRecorder.stop();
+            }
         }
-      } else {
+
+    } else {
         audioInput.click();
-      }
-    });
+    }
+});
 
-    audioInput.addEventListener('change', async function(){
-      if (!this.files || !this.files.length) return;
-      const file = this.files[0];
-      const loading = showLoading();
 
-      try {
+/* رفع ملف صوتي من الجهاز */
+audioInput.addEventListener('change', async function () {
+
+    if (!this.files || !this.files.length) return;
+
+    const file = this.files[0];
+    const loading = showLoading();
+
+    try {
+        await new Promise(resolve => setTimeout(resolve, 5000)); // مهلة 5 ثوانٍ
+
         const fd = new FormData();
         fd.append('audio_file', file);
+
         const res = await fetch('/api/upload_audio', {
-          method:'POST',
-          body: fd
+            method: 'POST',
+            body: fd
         });
-        if(!res.ok) throw new Error('HTTP '+res.status);
-        const j = await res.json();
+
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+
+        const data = await res.json();
         removeLoading(loading);
 
         displayMessage(
-          (CURRENT_LANG === 'ar'
-            ? ('🎙️ ('+ (file.name || 'ملف صوتي') +')')
-            : ('🎙️ ('+ (file.name || 'audio file') +')')
-          ),
-          'user'
+            CURRENT_LANG === "ar"
+                ? `🎙️ (${file.name || "ملف صوتي"})`
+                : `🎙️ (${file.name || "audio file"})`,
+            "user"
         );
-        displayAnswerWithControls(j.answer || '', j.corrected_message || j.transcribed_text || '');
-      } catch(e) {
-        removeLoading(loading);
-        displayError(
-          (CURRENT_LANG === 'ar')
-            ? ('فشل رفع الملف الصوتي: '+e.message)
-            : ('Failed to upload audio file: '+e.message)
-        );
-      } finally {
-        this.value = '';
-      }
-    });
 
-    window.sendQuickQuestion = function(q){
-      var f = document.getElementById('user-input');
-      f.value = q;
-      document.getElementById('send-btn').click();
-    };
-  </script>
+        const footerAI =
+            CURRENT_LANG === "ar"
+                ? "مُولَّد آليًا • قد يحتوي على أخطاء طفيفة<br>مع تحيات فريق زمرة 🩸"
+                : "AI-generated • may contain minor errors<br>With regards, Zomrah Team 🩸";
+
+        const finalAnswer =
+            `${data.answer}<br><br><span style="font-size:0.85em;color:#666">${footerAI}</span>`;
+
+        displayAnswerWithControls(finalAnswer, data.transcribed_text || "");
+
+    } catch (e) {
+        removeLoading(loading);
+
+        displayError(
+            CURRENT_LANG === "ar"
+                ? "فشل رفع الملف الصوتي."
+                : "Failed to upload audio file."
+        );
+
+    } finally {
+        this.value = '';
+    }
+});
+    </script>
+
 </body>
 </html>
