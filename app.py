@@ -2,11 +2,12 @@
 """
 ZOMRA_PROJECT - Flask Chatbot (Blood Donation Assistant)
 
-النسخة المعدلة حسب طلب المستخدم:
-- مصدر القاعدة: "القاعدة المعرفية" فقط.
-- إذا لم نجد إجابة في القاعدة: رسالة موحدة مع OpenAI + فوتر باللغة المناسبة.
-- تلخيص summarize_and_simplify يدعم عربي/إنجليزي.
-- Intent "خدمة العملاء" يرسل رابط واتساب جاهز.
+نسخة محسّنة:
+- اعتماد لغة الواجهة ui_lang كمرجع أساسي (ar / en).
+- تلخيص summarize_and_simplify الآن يحترم اللغة الممرَّرة دائماً.
+- إصلاح الخلط بين العربية والإنجليزية في الردود (خصوصاً جملة "هل ترغب بالتفصيل أكثر؟").
+- تحسين فرع قاعدة المعرفة + ترجمة للإنجليزي عند الحاجة.
+- تحسين فولباك خدمة العملاء والرد الافتراضي.
 """
 
 from openai import OpenAI
@@ -31,11 +32,15 @@ load_dotenv(override=True)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
-OPENAI_API_KEY   = (os.getenv("OPENAI_API_KEY") or "").strip().strip('"').strip("'")
-OPENAI_MODEL     = (os.getenv("OPENAI_MODEL") or "gpt-4o-mini").strip()
-FORCE_AI_FALLBACK = (os.getenv("FORCE_AI_FALLBACK") or "false").lower() in {"1", "true", "yes"}
+OPENAI_API_KEY = (os.getenv("OPENAI_API_KEY") or "").strip().strip('"').strip("'")
+OPENAI_MODEL = (os.getenv("OPENAI_MODEL") or "gpt-4o-mini").strip()
+FORCE_AI_FALLBACK = (os.getenv("FORCE_AI_FALLBACK") or "false").lower() in {
+    "1",
+    "true",
+    "yes",
+}
 
-URGENT_SHEET_URL    = (os.getenv("URGENT_NEEDS_SHEET_CSV") or "").strip()
+URGENT_SHEET_URL = (os.getenv("URGENT_NEEDS_SHEET_CSV") or "").strip()
 URGENT_JSON_PATH = "static/urgent_needs.json"
 CAMPAIGNS_JSON_PATH = "static/campaigns.json"
 
@@ -44,14 +49,16 @@ SMTP_PORT = int(os.getenv("SMTP_PORT") or "587")
 SMTP_USER = os.getenv("SMTP_USER") or ""
 SMTP_PASS = os.getenv("SMTP_PASS") or ""
 SMTP_FROM = os.getenv("SMTP_FROM") or ""
-SMTP_TLS  = (os.getenv("SMTP_TLS") or "true").lower() in {"1", "true", "yes"}
+SMTP_TLS = (os.getenv("SMTP_TLS") or "true").lower() in {"1", "true", "yes"}
 
-SMTP_READY = all([SMTP_HOST, SMTP_PORT, SMTP_FROM]) and (bool(SMTP_USER) == bool(SMTP_PASS) or not SMTP_USER)
+SMTP_READY = all([SMTP_HOST, SMTP_PORT, SMTP_FROM]) and (
+    bool(SMTP_USER) == bool(SMTP_PASS) or not SMTP_USER
+)
 
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY") or ""
-SENDGRID_FROM    = os.getenv("SENDGRID_FROM") or SMTP_FROM or ""
-EMAIL_FROM_NAME  = os.getenv("EMAIL_FROM") or "Zomra Project"
-SENDGRID_READY   = bool(SENDGRID_API_KEY)
+SENDGRID_FROM = os.getenv("SENDGRID_FROM") or SMTP_FROM or ""
+EMAIL_FROM_NAME = os.getenv("EMAIL_FROM") or "Zomra Project"
+SENDGRID_READY = bool(SENDGRID_API_KEY)
 
 if not OPENAI_API_KEY:
     print("⚠️ لم يتم العثور على OPENAI_API_KEY في .env. سيتم العمل دون ذكاء اصطناعي (وضع KB فقط).")
@@ -67,7 +74,10 @@ if OPENAI_API_KEY:
 # ==============================
 # 2) Arabic / Text utils
 # ==============================
-_ARABIC_DIACRITICS_RE = re.compile(r"[\u0617-\u061A\u064B-\u0652\u0670\u0653-\u065F\u06D6-\u06ED]")
+_ARABIC_DIACRITICS_RE = re.compile(
+    r"[\u0617-\u061A\u064B-\u0652\u0670\u0653-\u065F\u06D6-\u06ED]"
+)
+
 
 def normalize_arabic(text: str) -> str:
     """إزالة التشكيل وتوحيد بعض الحروف لتسهيل البحث بالتقريب."""
@@ -76,33 +86,50 @@ def normalize_arabic(text: str) -> str:
     t = _ARABIC_DIACRITICS_RE.sub("", text)
     t = (
         t.replace("أ", "ا")
-         .replace("إ", "ا")
-         .replace("آ", "ا")
-         .replace("ؤ", "و")
-         .replace("ئ", "ي")
-         .replace("ة", "ه")
-         .replace("ـ", "")
+        .replace("إ", "ا")
+        .replace("آ", "ا")
+        .replace("ؤ", "و")
+        .replace("ئ", "ي")
+        .replace("ة", "ه")
+        .replace("ـ", "")
     )
     t = unicodedata.normalize("NFKC", t)
     t = re.sub(r"\s+", " ", t).strip()
     return t
 
+
 def summarize_and_simplify(text: str, max_length: int = 250, lang: str = "ar") -> str:
-    """تلخيص بسيط مع احترام الجمل (يدعم عربي وإنجليزي)."""
+    """
+    تلخيص بسيط مع احترام الجمل (يدعم عربي وإنجليزي).
+    - lang = "ar": يختم بـ "هل ترغب بالتفصيل أكثر؟"
+    - lang = "en": يختم بـ "Would you like more details?"
+    """
     if not text or len(text) <= max_length:
         return text
-    cut_marks = [".", "؟", "!", "…", "؟"]
+
+    if lang == "en":
+        cut_marks = [".", "?", "!", "…"]
+    else:
+        cut_marks = [".", "؟", "!", "…"]
+
     trunc = text[: max_length - 5]
-    cut_pos = max(trunc.rfind(m) for m in cut_marks)
+    cut_pos = -1
+    for m in cut_marks:
+        pos = trunc.rfind(m)
+        if pos > cut_pos:
+            cut_pos = pos
+
     if cut_pos == -1:
         cut_pos = trunc.rfind(" ")
         if cut_pos == -1:
             cut_pos = len(trunc)
+
     summary = trunc[:cut_pos].strip()
     if lang == "en":
         return f"{summary}...\n\nWould you like more details?"
     else:
         return f"{summary}...\n\nهل ترغب بالتفصيل أكثر؟"
+
 
 def openai_translate(text: str, target_language_code: str) -> str:
     """ترجمة بسيطة باستخدام OpenAI عند توفره."""
@@ -129,6 +156,7 @@ def openai_translate(text: str, target_language_code: str) -> str:
         print("⚠️ ترجمة:", e)
         return text
 
+
 def translate_field_for_lang(text: str, lang: str) -> str:
     """ترجمة حقل واحد إذا كانت اللغة المطلوبة ليست العربية."""
     if not text:
@@ -137,8 +165,9 @@ def translate_field_for_lang(text: str, lang: str) -> str:
         return text
     return openai_translate(text, lang)
 
+
 def openai_correct(text: str) -> str:
-    """تصحيح الإملاء العربي باستخدام OpenAI إن توفر (غير مستخدم في الشات للتسريع)."""
+    """تصحيح الإملاء العربي باستخدام OpenAI إن توفر (حاليًا غير مستخدم للتسريع)."""
     if not client or not text:
         return text
     try:
@@ -154,28 +183,25 @@ def openai_correct(text: str) -> str:
         print("⚠️ تصحيح:", e)
         return text
 
+
 # فوتر عربي / إنجليزي
-FOOTER_AR = (
-    "مُولَّد آليًا • قد يحتوي على أخطاء طفيفة\n"
-    "مع تحياتي فريق زمرة 🩸"
-)
-FOOTER_EN = (
-    "AI-generated • may contain minor errors\n"
-    "With regards, Zomrah Team 🩸"
-)
+FOOTER_AR = "مُولَّد آليًا • قد يحتوي على أخطاء طفيفة\nمع تحياتي فريق زمرة 🩸"
+FOOTER_EN = "AI-generated • may contain minor errors\nWith regards, Zomrah Team 🩸"
 
 # ==============================
 # Intent: خدمة العملاء / الدعم
 # ==============================
 CUSTOMER_SERVICE_RE = re.compile(
     r"(خدمة.?العملاء|الدعم|التواصل|تواصل|واتساب|whatsapp|customer service|support|contact\s+us|contact)",
-    re.IGNORECASE
+    re.IGNORECASE,
 )
+
 
 def is_customer_service_intent(text: str) -> bool:
     if not text:
         return False
     return bool(CUSTOMER_SERVICE_RE.search(text))
+
 
 WHATSAPP_URL = "https://wa.me/966504635135?text=" + up.quote(
     "أرغب في التواصل مع خدمة عملاء زمرة"
@@ -188,6 +214,7 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
 DB_NAME = "chat_logs.db"
+
 
 def init_db():
     """تهيئة قواعد البيانات (logs + reminders)."""
@@ -223,6 +250,7 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 def save_log(raw_query, corrected_query, response_type, kb_source, bot_response):
     """حفظ ملخص الرد في جدول logs لأغراض الإحصاء والمتابعة."""
     try:
@@ -254,6 +282,7 @@ def save_log(raw_query, corrected_query, response_type, kb_source, bot_response)
         except Exception:
             pass
 
+
 with app.app_context():
     try:
         init_db()
@@ -264,10 +293,13 @@ with app.app_context():
 # ==============================
 # 4) Base Routes
 # ==============================
+
+
 @app.route("/")
 def index():
     """واجهة الشات (تستخدم templates/index.html)."""
     return render_template("index.html")
+
 
 @app.route("/health")
 def health():
@@ -291,6 +323,8 @@ def health():
 # ==============================
 # 5) Knowledge Base
 # ==============================
+
+
 def load_knowledge_base(path: str = "knowledge_base.json"):
     kb = {}
     if os.path.exists(path):
@@ -299,7 +333,6 @@ def load_knowledge_base(path: str = "knowledge_base.json"):
                 data = json.load(f)
             for item in data:
                 answer = item.get("answer", "")
-                # نحتفظ بالمصدر في الملف لكن عند الإظهار سنستبدله بـ "القاعدة المعرفية"
                 src = (
                     item.get("source_type")
                     or item.get("source")
@@ -329,7 +362,9 @@ def load_knowledge_base(path: str = "knowledge_base.json"):
         },
     }
 
+
 KNOWLEDGE_BASE = load_knowledge_base()
+
 
 def search_knowledge_base(corrected_query: str):
     """
@@ -348,7 +383,7 @@ def search_knowledge_base(corrected_query: str):
         return None, None, 0
 
     best_partial = process.extractOne(nq, vals, scorer=fuzz.partial_ratio)
-    best_token   = process.extractOne(nq, vals, scorer=fuzz.token_sort_ratio)
+    best_token = process.extractOne(nq, vals, scorer=fuzz.token_sort_ratio)
 
     candidate = None
     if best_partial and best_token:
@@ -370,6 +405,8 @@ def search_knowledge_base(corrected_query: str):
 # ==============================
 # 6) Chat Endpoint
 # ==============================
+
+
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.json or {}
@@ -380,9 +417,10 @@ def chat():
     ui_lang = (data.get("lang") or "").lower()
     if ui_lang not in ("ar", "en"):
         ui_lang = "ar"  # افتراضي عربي
+    target_lang = ui_lang  # نستخدم لغة الواجهة كمرجع أساسي
 
     if not user_message:
-        msg = "الرجاء كتابة سؤالك." if ui_lang == "ar" else "Please type your question."
+        msg = "الرجاء كتابة سؤالك." if target_lang == "ar" else "Please type your question."
         return jsonify(
             {
                 "answer": msg,
@@ -397,7 +435,7 @@ def chat():
     # أولوية: Intent خدمة العملاء
     # --------------------------
     if is_customer_service_intent(user_message):
-        if ui_lang == "ar":
+        if target_lang == "ar":
             txt = (
                 "للتواصل مع خدمة عملاء زمرة عبر واتساب، اضغط على الرابط التالي:\n\n"
                 f'<a href="{WHATSAPP_URL}" target="_blank" rel="noopener">'
@@ -423,14 +461,12 @@ def chat():
             }
         ), 200
 
-    # كشف لغة النص (سريع)
+    # كشف لغة النص (سريع) - يُستخدم فقط لمعرفة إن كان السؤال بالعربي للبحث في KB
     detected_lang = "ar"
     try:
         detected_lang = detect(user_message)
     except LangDetectException:
         pass
-
-    target_lang = ui_lang  # نجيب بنفس لغة الواجهة قدر الإمكان
 
     # --------------------------
     # 1) نحاول من قاعدة المعرفة
@@ -440,27 +476,32 @@ def chat():
     kb_source = None
     kb_score = 0
 
+    # قاعدة المعرفة عربية بالأساس، فنبحث فقط لو النص عربي
     if detected_lang == "ar":
         kb_answer, kb_source, kb_score = search_knowledge_base(user_message)
 
     if kb_answer and kb_score >= SIM_THRESHOLD:
         source_type = "KB"
-        # حسب الطلب: دائماً "القاعدة المعرفية"
         source_text = "القاعدة المعرفية" if target_lang == "ar" else "Knowledge base"
         not_understood = False
 
         if target_lang == "en" and client:
-            # نترجم الجواب والقالب للإنجليزية
-            core_text = kb_answer if want_detail else summarize_and_simplify(kb_answer, 220, "en")
+            # نترجم الجواب الأساسي إلى الإنجليزية أولاً
+            translated = openai_translate(kb_answer, "en")
+            core_text = translated if want_detail else summarize_and_simplify(
+                translated, 220, "en"
+            )
             final_text = (
                 "Source: Knowledge base\n\n"
                 f"{core_text}\n\n"
                 f"{FOOTER_EN}"
             )
         else:
-            core_ar = kb_answer if want_detail else summarize_and_simplify(kb_answer, 220, "ar")
+            core_ar = kb_answer if want_detail else summarize_and_simplify(
+                kb_answer, 220, "ar"
+            )
             final_text = (
-                f"المصدر: القاعدة المعرفية\n\n"
+                "المصدر: القاعدة المعرفية\n\n"
                 f"{core_ar}\n\n"
                 f"{FOOTER_AR}"
             )
@@ -564,15 +605,19 @@ def chat():
             source_text = "OpenAI"
 
             if target_lang == "en":
-                core_txt = ai_text if want_detail else summarize_and_simplify(ai_text, 230, "en")
+                core_txt = ai_text if want_detail else summarize_and_simplify(
+                    ai_text, 230, "en"
+                )
                 final_text = (
-                    "We could not find an answer in the knowledge base, "
-                    "so OpenAI generated the following response:\n\n"
+                    "We couldn’t find an answer in the knowledge base; "
+                    "we used OpenAI to draft the following reply:\n\n"
                     f"{core_txt}\n\n"
                     f"{FOOTER_EN}"
                 )
             else:
-                core_txt = ai_text if want_detail else summarize_and_simplify(ai_text, 230, "ar")
+                core_txt = ai_text if want_detail else summarize_and_simplify(
+                    ai_text, 230, "ar"
+                )
                 final_text = (
                     "لم نعثر على إجابة في قاعدة المعرفة؛ استعنا بـ OpenAI لصياغة الرد التالي:\n\n"
                     f"{core_txt}\n\n"
@@ -580,6 +625,7 @@ def chat():
                 )
 
     except Exception as e:
+        print("⚠️ خطأ في استدعاء OpenAI:", e)
         final_text, source_type, source_text = fallback_message(target_lang, ai_error=True)
 
     save_log(user_message, user_message, source_type, source_text, final_text)
@@ -597,8 +643,11 @@ def chat():
 # ==============================
 # 7) Urgent Needs
 # ==============================
+
+
 def gmaps_place_link(name: str) -> str:
     return f"https://www.google.com/maps/search/?api=1&query={up.quote(name)}"
+
 
 def _fetch_csv(url: str):
     try:
@@ -610,6 +659,7 @@ def _fetch_csv(url: str):
         print("⚠️ CSV:", e)
         return None
 
+
 def _load_json(path: str):
     try:
         if os.path.exists(path):
@@ -618,6 +668,7 @@ def _load_json(path: str):
     except Exception as e:
         print("⚠️ JSON:", e)
     return None
+
 
 def _format_urgent_rows(rows, lang: str = "ar"):
     out = []
@@ -647,8 +698,8 @@ def _format_urgent_rows(rows, lang: str = "ar"):
         if hospital:
             if lang == "en":
                 hospital_t = translate_field_for_lang(hospital, "en")
-                status_t   = translate_field_for_lang(status or "", "en")
-                details_t  = translate_field_for_lang(details or "", "en")
+                status_t = translate_field_for_lang(status or "", "en")
+                details_t = translate_field_for_lang(details or "", "en")
             else:
                 hospital_t, status_t, details_t = hospital, status, details
 
@@ -661,6 +712,7 @@ def _format_urgent_rows(rows, lang: str = "ar"):
                 }
             )
     return out
+
 
 FALLBACK_URGENT = [
     {
@@ -682,6 +734,7 @@ FALLBACK_URGENT = [
         "location_url": gmaps_place_link("East Jeddah Hospital Blood Bank"),
     },
 ]
+
 
 @app.route("/api/urgent_needs")
 def urgent_needs():
@@ -726,6 +779,8 @@ def urgent_needs():
 # ==============================
 # 8) Eligibility (فحص الأهلية)
 # ==============================
+
+
 ELIGIBILITY_QUESTIONS = [
     {"id": "age", "text": "كم عمرك؟", "type": "number", "min": 1, "max": 100},
     {"id": "weight", "text": "كم وزنك بالكيلو؟", "type": "number", "min": 30, "max": 300},
@@ -772,9 +827,11 @@ ELIGIBILITY_QUESTIONS = [
     },
 ]
 
+
 @app.route("/api/eligibility/questions")
 def eligibility_questions():
     return jsonify({"questions": ELIGIBILITY_QUESTIONS})
+
 
 def evaluate_eligibility(payload: dict):
     reasons = []
@@ -830,6 +887,7 @@ def evaluate_eligibility(payload: dict):
 
     return eligible, reasons, next_date
 
+
 @app.route("/api/eligibility/evaluate", methods=["POST"])
 def eligibility_evaluate():
     payload = request.json or {}
@@ -845,6 +903,8 @@ def eligibility_evaluate():
 # ==============================
 # 9) Reminder (Email + ICS)
 # ==============================
+
+
 def make_ics_bytes(date_str: str) -> bytes:
     dt = (
         datetime.fromisoformat(date_str)
@@ -876,6 +936,7 @@ LOCATION:أقرب بنك دم
 END:VEVENT
 END:VCALENDAR"""
     return ics.encode("utf-8")
+
 
 def try_send_email(
     to_email: str, subject: str, body: str, ics_bytes: bytes, ics_name: str
@@ -947,6 +1008,7 @@ def try_send_email(
     except Exception as e:
         return False, str(e)
 
+
 @app.route("/api/reminder", methods=["POST"])
 def reminder():
     data = request.json or {}
@@ -1004,6 +1066,7 @@ def reminder():
 
     return jsonify({"ok": True, "next_date": next_date, "email_status": email_status})
 
+
 @app.route("/api/reminder/ics/<date_str>")
 def reminder_ics(date_str):
     try:
@@ -1023,6 +1086,8 @@ def reminder_ics(date_str):
 # ==============================
 # 10) Upload audio (Mock)
 # ==============================
+
+
 @app.route("/api/upload_audio", methods=["POST"])
 def upload_audio():
     if "audio_file" not in request.files:
@@ -1056,6 +1121,8 @@ def upload_audio():
 # ==============================
 # 11) Stats / Campaigns
 # ==============================
+
+
 @app.route("/api/stats")
 def stats():
     try:
@@ -1069,6 +1136,7 @@ def stats():
         return jsonify({"ok": True, "total_logs": total, "by_type": by_type})
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
+
 
 @app.route("/api/campaigns")
 def campaigns():
@@ -1086,6 +1154,7 @@ def campaigns():
 # ==============================
 # 12) Run (Local)
 # ==============================
+
 if __name__ == "__main__":
     init_db()
     app.run(host="0.0.0.0", port=5000, debug=True)
