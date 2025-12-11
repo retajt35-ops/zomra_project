@@ -2,20 +2,13 @@
 """
 ZOMRA_PROJECT - Flask Chatbot (Blood Donation Assistant)
 
-الميزات:
-- شات ذكي مع قاعدة معرفية + OpenAI (gpt-4o-mini) عند الحاجة.
-- تحميل قاعدة معرفية من knowledge_base.json (قابلة للتعديل).
-- احتياج عاجل للدم من urgent_needs.json أو Google Sheet CSV.
-- خريطة مراكز تبرع جدة (centers_jeddah.json) من الواجهة (index.html + static).
-- فحص أهلية التبرع /api/eligibility/*.
-- تذكير بالتبرع عبر الإيميل باستخدام SendGrid أو SMTP (+ مرفق .ics).
-- رفع صوت (mock) وتحويله لسؤال من القاعدة المعرفية.
-- إحصائيات logs + حملات من campaigns.json.
+النسخة المعدلة حسب طلب المستخدم:
+- مصدر القاعدة: "القاعدة المعرفية" فقط.
+- إذا لم نجد إجابة في القاعدة: رسالة موحدة مع OpenAI + فوتر باللغة المناسبة.
+- تلخيص summarize_and_simplify يدعم عربي/إنجليزي.
+- Intent "خدمة العملاء" يرسل رابط واتساب جاهز.
 """
 
-# ==============================
-# 0) Imports
-# ==============================
 from openai import OpenAI
 from flask import Flask, request, jsonify, render_template, Response
 from flask_cors import CORS
@@ -28,6 +21,7 @@ from langdetect import detect, LangDetectException
 from io import StringIO
 from typing import Tuple
 import requests
+import urllib.parse as up
 
 # ==============================
 # 1) ENV / Config
@@ -37,30 +31,27 @@ load_dotenv(override=True)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
-OPENAI_API_KEY = (os.getenv("OPENAI_API_KEY") or "").strip().strip('"').strip("'")
-OPENAI_MODEL = (os.getenv("OPENAI_MODEL") or "gpt-4o-mini").strip()
+OPENAI_API_KEY   = (os.getenv("OPENAI_API_KEY") or "").strip().strip('"').strip("'")
+OPENAI_MODEL     = (os.getenv("OPENAI_MODEL") or "gpt-4o-mini").strip()
 FORCE_AI_FALLBACK = (os.getenv("FORCE_AI_FALLBACK") or "false").lower() in {"1", "true", "yes"}
 
-# مهم: افتراضيًا استخدم الملفات داخل static حتى لو ما ضبطتي المتغيرات في Render
-URGENT_SHEET_URL = (os.getenv("URGENT_NEEDS_SHEET_CSV") or "").strip()
+URGENT_SHEET_URL    = (os.getenv("URGENT_NEEDS_SHEET_CSV") or "").strip()
 URGENT_JSON_PATH = "static/urgent_needs.json"
 CAMPAIGNS_JSON_PATH = "static/campaigns.json"
 
-# SMTP (اختياري - للمحلي تقريباً)
 SMTP_HOST = os.getenv("SMTP_HOST") or ""
 SMTP_PORT = int(os.getenv("SMTP_PORT") or "587")
 SMTP_USER = os.getenv("SMTP_USER") or ""
 SMTP_PASS = os.getenv("SMTP_PASS") or ""
 SMTP_FROM = os.getenv("SMTP_FROM") or ""
-SMTP_TLS = (os.getenv("SMTP_TLS") or "true").lower() in {"1", "true", "yes"}
+SMTP_TLS  = (os.getenv("SMTP_TLS") or "true").lower() in {"1", "true", "yes"}
 
 SMTP_READY = all([SMTP_HOST, SMTP_PORT, SMTP_FROM]) and (bool(SMTP_USER) == bool(SMTP_PASS) or not SMTP_USER)
 
-# SendGrid (المعتمد أكثر في Render)
 SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY") or ""
-SENDGRID_FROM = os.getenv("SENDGRID_FROM") or SMTP_FROM or ""
-EMAIL_FROM_NAME = os.getenv("EMAIL_FROM") or "Zomra Project"
-SENDGRID_READY = bool(SENDGRID_API_KEY)
+SENDGRID_FROM    = os.getenv("SENDGRID_FROM") or SMTP_FROM or ""
+EMAIL_FROM_NAME  = os.getenv("EMAIL_FROM") or "Zomra Project"
+SENDGRID_READY   = bool(SENDGRID_API_KEY)
 
 if not OPENAI_API_KEY:
     print("⚠️ لم يتم العثور على OPENAI_API_KEY في .env. سيتم العمل دون ذكاء اصطناعي (وضع KB فقط).")
@@ -68,7 +59,6 @@ if not OPENAI_API_KEY:
 client = None
 if OPENAI_API_KEY:
     try:
-        # نهيئ عميل OpenAI
         client = OpenAI(api_key=OPENAI_API_KEY)
     except Exception as e:
         print(f"⚠️ فشل تهيئة OpenAI: {e}")
@@ -79,7 +69,6 @@ if OPENAI_API_KEY:
 # ==============================
 _ARABIC_DIACRITICS_RE = re.compile(r"[\u0617-\u061A\u064B-\u0652\u0670\u0653-\u065F\u06D6-\u06ED]")
 
-
 def normalize_arabic(text: str) -> str:
     """إزالة التشكيل وتوحيد بعض الحروف لتسهيل البحث بالتقريب."""
     if not text:
@@ -87,42 +76,33 @@ def normalize_arabic(text: str) -> str:
     t = _ARABIC_DIACRITICS_RE.sub("", text)
     t = (
         t.replace("أ", "ا")
-        .replace("إ", "ا")
-        .replace("آ", "ا")
-        .replace("ؤ", "و")
-        .replace("ئ", "ي")
-        .replace("ة", "ه")
-        .replace("ـ", "")
+         .replace("إ", "ا")
+         .replace("آ", "ا")
+         .replace("ؤ", "و")
+         .replace("ئ", "ي")
+         .replace("ة", "ه")
+         .replace("ـ", "")
     )
     t = unicodedata.normalize("NFKC", t)
     t = re.sub(r"\s+", " ", t).strip()
     return t
 
-
 def summarize_and_simplify(text: str, max_length: int = 250, lang: str = "ar") -> str:
-    """تقليل طول النص مع احترام الجمل قدر الإمكان (يدعم العربية والإنجليزية)."""
-
+    """تلخيص بسيط مع احترام الجمل (يدعم عربي وإنجليزي)."""
     if not text or len(text) <= max_length:
         return text
-
-    cut_marks = [".", "؟", "!", "…"]
+    cut_marks = [".", "؟", "!", "…", "؟"]
     trunc = text[: max_length - 5]
     cut_pos = max(trunc.rfind(m) for m in cut_marks)
-
     if cut_pos == -1:
         cut_pos = trunc.rfind(" ")
         if cut_pos == -1:
             cut_pos = len(trunc)
-
     summary = trunc[:cut_pos].strip()
-
-    # الرسالة حسب اللغة
     if lang == "en":
         return f"{summary}...\n\nWould you like more details?"
     else:
         return f"{summary}...\n\nهل ترغب بالتفصيل أكثر؟"
-
-
 
 def openai_translate(text: str, target_language_code: str) -> str:
     """ترجمة بسيطة باستخدام OpenAI عند توفره."""
@@ -141,15 +121,13 @@ def openai_translate(text: str, target_language_code: str) -> str:
         resp = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=256,  # تقليل الحد لسرعة أكبر
+            max_tokens=256,
         )
         out = (resp.choices[0].message.content or "").strip()
-        # إزالة أي مقدمة مثل: "الترجمة:"
         return out.split(":", 1)[-1].strip() if ":" in out[:15] else out
     except Exception as e:
         print("⚠️ ترجمة:", e)
         return text
-
 
 def translate_field_for_lang(text: str, lang: str) -> str:
     """ترجمة حقل واحد إذا كانت اللغة المطلوبة ليست العربية."""
@@ -158,7 +136,6 @@ def translate_field_for_lang(text: str, lang: str) -> str:
     if lang == "ar":
         return text
     return openai_translate(text, lang)
-
 
 def openai_correct(text: str) -> str:
     """تصحيح الإملاء العربي باستخدام OpenAI إن توفر (غير مستخدم في الشات للتسريع)."""
@@ -169,7 +146,7 @@ def openai_correct(text: str) -> str:
         resp = client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=128,  # صغير لسرعة التصحيح
+            max_tokens=128,
         )
         out = (resp.choices[0].message.content or "").strip()
         return out.split(":", 1)[-1].strip() if ":" in out[:15] else out
@@ -177,10 +154,32 @@ def openai_correct(text: str) -> str:
         print("⚠️ تصحيح:", e)
         return text
 
+# فوتر عربي / إنجليزي
+FOOTER_AR = (
+    "مُولَّد آليًا • قد يحتوي على أخطاء طفيفة\n"
+    "مع تحياتي فريق زمرة 🩸"
+)
+FOOTER_EN = (
+    "AI-generated • may contain minor errors\n"
+    "With regards, Zomrah Team 🩸"
+)
 
-# فوتر موحّد حسب اللغة
-BASE_FOOTER_AR = "مُولَّد آليًا • قد يحتوي على أخطاء طفيفة\nمع تحياتي فريق زمرة"
-BASE_FOOTER_EN = "AI-generated • may contain minor errors\nWith regards, Zomrah team"
+# ==============================
+# Intent: خدمة العملاء / الدعم
+# ==============================
+CUSTOMER_SERVICE_RE = re.compile(
+    r"(خدمة.?العملاء|الدعم|التواصل|تواصل|واتساب|whatsapp|customer service|support|contact\s+us|contact)",
+    re.IGNORECASE
+)
+
+def is_customer_service_intent(text: str) -> bool:
+    if not text:
+        return False
+    return bool(CUSTOMER_SERVICE_RE.search(text))
+
+WHATSAPP_URL = "https://wa.me/966504635135?text=" + up.quote(
+    "أرغب في التواصل مع خدمة عملاء زمرة"
+)
 
 # ==============================
 # 3) Flask + DB
@@ -189,7 +188,6 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
 DB_NAME = "chat_logs.db"
-
 
 def init_db():
     """تهيئة قواعد البيانات (logs + reminders)."""
@@ -225,13 +223,14 @@ def init_db():
     conn.commit()
     conn.close()
 
-
 def save_log(raw_query, corrected_query, response_type, kb_source, bot_response):
     """حفظ ملخص الرد في جدول logs لأغراض الإحصاء والمتابعة."""
     try:
         conn = sqlite3.connect(DB_NAME)
         c = conn.cursor()
-        snippet = (bot_response or "")[:500] + ("..." if bot_response and len(bot_response) > 500 else "")
+        snippet = (bot_response or "")[:500] + (
+            "..." if bot_response and len(bot_response) > 500 else ""
+        )
         c.execute(
             """
             INSERT INTO logs(timestamp,raw_query,corrected_query,response_type,kb_source,bot_response)
@@ -255,8 +254,6 @@ def save_log(raw_query, corrected_query, response_type, kb_source, bot_response)
         except Exception:
             pass
 
-
-# مهم جداً للسيرفر (Render / gunicorn):
 with app.app_context():
     try:
         init_db()
@@ -267,13 +264,10 @@ with app.app_context():
 # ==============================
 # 4) Base Routes
 # ==============================
-
-
 @app.route("/")
 def index():
     """واجهة الشات (تستخدم templates/index.html)."""
     return render_template("index.html")
-
 
 @app.route("/health")
 def health():
@@ -297,8 +291,6 @@ def health():
 # ==============================
 # 5) Knowledge Base
 # ==============================
-
-
 def load_knowledge_base(path: str = "knowledge_base.json"):
     kb = {}
     if os.path.exists(path):
@@ -307,7 +299,12 @@ def load_knowledge_base(path: str = "knowledge_base.json"):
                 data = json.load(f)
             for item in data:
                 answer = item.get("answer", "")
-                src = item.get("source_type") or item.get("source") or "وزارة الصحة السعودية"
+                # نحتفظ بالمصدر في الملف لكن عند الإظهار سنستبدله بـ "القاعدة المعرفية"
+                src = (
+                    item.get("source_type")
+                    or item.get("source")
+                    or "القاعدة المعرفية"
+                )
                 for q in item.get("questions", []):
                     kb[q] = {"answer": answer, "source": src}
             if kb:
@@ -320,21 +317,19 @@ def load_knowledge_base(path: str = "knowledge_base.json"):
     return {
         "ما هي شروط التبرع بالدم؟": {
             "answer": "يجب أن يكون العمر 18-60 عاماً والوزن ≥50 كجم وبصحة جيدة وبدون أمراض معدية. يفضّل مراجعة المستشفى قبل التبرع.",
-            "source": "وزارة الصحة السعودية",
+            "source": "القاعدة المعرفية",
         },
         "المدة الفاصلة بين التبرعات؟": {
             "answer": "التبرع الكامل: 90 يومًا على الأقل بين كل تبرعين. مكوّنات الدم قد تختلف.",
-            "source": "وزارة الصحة السعودية",
+            "source": "القاعدة المعرفية",
         },
         "هل التبرع بالدم مؤلم؟": {
             "answer": "وخزة الإبرة سريعة وخفيفة عادةً، والسحب نفسه يستغرق دقائق، مع راحة بسيطة بعد التبرع.",
-            "source": "وزارة الصحة السعودية",
+            "source": "القاعدة المعرفية",
         },
     }
 
-
 KNOWLEDGE_BASE = load_knowledge_base()
-
 
 def search_knowledge_base(corrected_query: str):
     """
@@ -353,7 +348,7 @@ def search_knowledge_base(corrected_query: str):
         return None, None, 0
 
     best_partial = process.extractOne(nq, vals, scorer=fuzz.partial_ratio)
-    best_token = process.extractOne(nq, vals, scorer=fuzz.token_sort_ratio)
+    best_token   = process.extractOne(nq, vals, scorer=fuzz.token_sort_ratio)
 
     candidate = None
     if best_partial and best_token:
@@ -365,7 +360,6 @@ def search_knowledge_base(corrected_query: str):
         return None, None, 0
 
     best_norm_text, score = candidate
-    # إيجاد السؤال الأصلي الموافق للنص الموحّد
     orig = next((k for k, v in norm.items() if v == best_norm_text), None)
     if not orig:
         return None, None, 0
@@ -374,10 +368,8 @@ def search_knowledge_base(corrected_query: str):
     return d["answer"], d.get("source"), int(score)
 
 # ==============================
-# 6) Chat Endpoint (سريع + not_understood)
+# 6) Chat Endpoint
 # ==============================
-
-
 @app.route("/api/chat", methods=["POST"])
 def chat():
     data = request.json or {}
@@ -385,7 +377,6 @@ def chat():
     user_message = raw.strip()
     want_detail = bool(data.get("detail"))
 
-    # لغة الواجهة من الفرونت (ar / en)
     ui_lang = (data.get("lang") or "").lower()
     if ui_lang not in ("ar", "en"):
         ui_lang = "ar"  # افتراضي عربي
@@ -402,6 +393,36 @@ def chat():
             }
         ), 200
 
+    # --------------------------
+    # أولوية: Intent خدمة العملاء
+    # --------------------------
+    if is_customer_service_intent(user_message):
+        if ui_lang == "ar":
+            txt = (
+                "للتواصل مع خدمة عملاء زمرة عبر واتساب، اضغط على الرابط التالي:\n\n"
+                f'<a href="{WHATSAPP_URL}" target="_blank" rel="noopener">'
+                "فتح واتساب</a>\n\n"
+                f"{FOOTER_AR}"
+            )
+        else:
+            txt = (
+                "To contact Zomrah customer support via WhatsApp, click the link below:\n\n"
+                f'<a href="{WHATSAPP_URL}" target="_blank" rel="noopener">'
+                "Open WhatsApp</a>\n\n"
+                f"{FOOTER_EN}"
+            )
+
+        save_log(user_message, user_message, "Support", "Customer Service", txt)
+        return jsonify(
+            {
+                "answer": txt,
+                "source_type": "Support",
+                "source_text": "Customer Service",
+                "corrected_message": user_message,
+                "not_understood": False,
+            }
+        ), 200
+
     # كشف لغة النص (سريع)
     detected_lang = "ar"
     try:
@@ -409,7 +430,7 @@ def chat():
     except LangDetectException:
         pass
 
-    target_lang = ui_lang  # نرد بنفس لغة واجهة المستخدم
+    target_lang = ui_lang  # نجيب بنفس لغة الواجهة قدر الإمكان
 
     # --------------------------
     # 1) نحاول من قاعدة المعرفة
@@ -423,38 +444,28 @@ def chat():
         kb_answer, kb_source, kb_score = search_knowledge_base(user_message)
 
     if kb_answer and kb_score >= SIM_THRESHOLD:
-        # رد من القاعدة المعرفية
         source_type = "KB"
-        kb_source_label_ar = "القاعدة المعرفية"
-        kb_source_label_en = "Knowledge base"
+        # حسب الطلب: دائماً "القاعدة المعرفية"
+        source_text = "القاعدة المعرفية" if target_lang == "ar" else "Knowledge base"
         not_understood = False
 
-        # نص أساسي (عربي) ثم نترجمه عند الحاجة
-        core_text_ar = kb_answer if want_detail else summarize_and_simplify(kb_answer, 220)
-
-        if target_lang == "en":
-            # نترجم فقط المحتوى، ثم نبني قالب إنجليزي نظيف
-            core_text_en = openai_translate(core_text_ar, "en") if client else core_text_ar
+        if target_lang == "en" and client:
+            # نترجم الجواب والقالب للإنجليزية
+            core_text = kb_answer if want_detail else summarize_and_simplify(kb_answer, 220, "en")
             final_text = (
-                "We found an answer in the knowledge base.\n\n"
-                f"{core_text_en}\n\n"
-                f"Source: {kb_source_label_en}\n\n"
-                f"{BASE_FOOTER_EN}"
+                "Source: Knowledge base\n\n"
+                f"{core_text}\n\n"
+                f"{FOOTER_EN}"
             )
-            source_text = kb_source_label_en
         else:
+            core_ar = kb_answer if want_detail else summarize_and_simplify(kb_answer, 220, "ar")
             final_text = (
-                "تم العثور على إجابة في القاعدة المعرفية.\n\n"
-                f"{core_text_ar}\n\n"
-                f"المصدر: {kb_source_label_ar}\n\n"
-                f"{BASE_FOOTER_AR}"
+                f"المصدر: القاعدة المعرفية\n\n"
+                f"{core_ar}\n\n"
+                f"{FOOTER_AR}"
             )
-            source_text = kb_source_label_ar
 
-        # نحفظ السجل مع مصدر القاعدة الحقيقي (للاستخدام الداخلي فقط)
-        internal_source = kb_source or kb_source_label_ar
-        save_log(user_message, user_message, source_type, internal_source, final_text)
-
+        save_log(user_message, user_message, source_type, source_text, final_text)
         return jsonify(
             {
                 "answer": final_text,
@@ -466,25 +477,23 @@ def chat():
         ), 200
 
     # --------------------------
-    # 2) هنا نعتبر أن السؤال "غير مفهوم من القاعدة"
-    #    فنستخدم OpenAI أو fallback
+    # 2) لم نجد إجابة في القاعدة → AI أو فولباك
     # --------------------------
-    not_understood = True  # مهم للفرونت (الأيقونة الحمراء مثلاً)
+    not_understood = True
 
-    # Templates لرسالة "لم أستطع فهم سؤالك" مع زر واتساب
     def fallback_message(lang: str, ai_error: bool = False) -> Tuple[str, str, str]:
         """
         ترجع: (final_text, source_type, source_text)
         """
-        wa_url = "https://wa.me/966504635135"
+        wa_url = WHATSAPP_URL
         wa_btn_ar = (
             f'<a href="{wa_url}" '
             'target="_blank" rel="noopener" '
             'style="display:inline-block;margin-top:8px;padding:8px 14px;'
             'border-radius:999px;background:#25D366;color:#fff;'
             'text-decoration:none;font-weight:700;">'
-            "التواصل عبر واتساب"
-            "</a>"
+            'التواصل عبر واتساب'
+            '</a>'
         )
         wa_btn_en = (
             f'<a href="{wa_url}" '
@@ -492,26 +501,26 @@ def chat():
             'style="display:inline-block;margin-top:8px;padding:8px 14px;'
             'border-radius:999px;background:#25D366;color:#fff;'
             'text-decoration:none;font-weight:700;">'
-            "Contact via WhatsApp"
-            "</a>"
+            'Contact via WhatsApp'
+            '</a>'
         )
 
         if lang == "en":
-            base = "I couldn’t clearly understand your question…"
+            base = "I couldn’t clearly understand your question."
             if ai_error:
                 base += "\nThere was also an issue connecting to the AI service."
             base += "\nYou can contact the Zomrah team via WhatsApp:\n\n"
-            base += wa_btn_en + "\n\nSource: Zomrah team\n\n" + BASE_FOOTER_EN
+            base += wa_btn_en + "\n\n" + FOOTER_EN
             return base, "Fallback", "Zomrah team"
         else:
-            base = "لم أستطع فهم سؤالك…"
+            base = "لم أستطع فهم سؤالك بشكل كافٍ."
             if ai_error:
-                base += "\nوحدثت مشكلة في الاتصال بخدمة الذكاء الاصطناعي."
+                base += "\nكما حدثت مشكلة في الاتصال بخدمة الذكاء الاصطناعي."
             base += "\nيمكنك التواصل مع فريق زمرة عبر واتساب:\n\n"
-            base += wa_btn_ar + "\n\nالمصدر: فريق زمرة\n\n" + BASE_FOOTER_AR
+            base += wa_btn_ar + "\n\n" + FOOTER_AR
             return base, "Fallback", "فريق زمرة"
 
-    # لو ما في OpenAI أو مفعّل FORCE_AI_FALLBACK ⇒ مباشرة فولباك
+    # لو ما في OpenAI أو مفعّل FORCE_AI_FALLBACK ⇒ فولباك دقيق
     if (not client) or FORCE_AI_FALLBACK:
         final_text, source_type, source_text = fallback_message(target_lang, ai_error=False)
         save_log(user_message, user_message, source_type, source_text, final_text)
@@ -526,15 +535,15 @@ def chat():
         ), 200
 
     # --------------------------
-    # 3) استخدام OpenAI مع رسالة ثابتة
+    # 3) استخدام OpenAI مع الرسالة الجديدة
     # --------------------------
     try:
         prompt_lang = "العربية" if target_lang == "ar" else "الإنجليزية"
         system_instruction = (
-            "أنت مساعد طبي يجيب عن أسئلة التبرع بالدم وفق إرشادات وزارة الصحة السعودية فقط.\n"
-            "- أجب باختصار قدر الإمكان.\n"
+            f"أنت مساعد طبي يجيب عن أسئلة التبرع بالدم وفق إرشادات وزارة الصحة السعودية فقط.\n"
+            f"- أجب باختصار قدر الإمكان.\n"
             f"- أجب بلغة الواجهة المطلوبة: {prompt_lang}.\n"
-            "- إن لم تكن متأكداً، اعتذر بلطف واطلب مراجعة الطبيب أو التواصل مع فريق زمرة.\n"
+            f"- إن لم تكن متأكداً، اعتذر بلطف واطلب مراجعة الطبيب أو التواصل مع فريق زمرة.\n"
         )
 
         res = client.chat.completions.create(
@@ -549,31 +558,28 @@ def chat():
         ai_text = (res.choices[0].message.content or "").strip()
 
         if not ai_text or len(ai_text) < 15:
-            # رد قصير أو غير مفيد ⇒ اعتبره فشل واذهب للفولباك
             final_text, source_type, source_text = fallback_message(target_lang, ai_error=False)
         else:
             source_type = "AI"
-            # نطبق القالب المطلوب منّكِ:
+            source_text = "OpenAI"
+
             if target_lang == "en":
-                core = ai_text if want_detail else summarize_and_simplify(ai_text, 230)
+                core_txt = ai_text if want_detail else summarize_and_simplify(ai_text, 230, "en")
                 final_text = (
-                    "We couldn't find an answer in the knowledge base; "
-                    "we used OpenAI to draft the following reply:\n\n"
-                    f"{core}\n\n"
-                    f"{BASE_FOOTER_EN}"
+                    "We could not find an answer in the knowledge base, "
+                    "so OpenAI generated the following response:\n\n"
+                    f"{core_txt}\n\n"
+                    f"{FOOTER_EN}"
                 )
-                source_text = "Knowledge base + OpenAI"
             else:
-                core = ai_text if want_detail else summarize_and_simplify(ai_text, 230)
+                core_txt = ai_text if want_detail else summarize_and_simplify(ai_text, 230, "ar")
                 final_text = (
                     "لم نعثر على إجابة في قاعدة المعرفة؛ استعنا بـ OpenAI لصياغة الرد التالي:\n\n"
-                    f"{core}\n\n"
-                    f"{BASE_FOOTER_AR}"
+                    f"{core_txt}\n\n"
+                    f"{FOOTER_AR}"
                 )
-                source_text = "القاعدة المعرفية + OpenAI"
 
     except Exception as e:
-        print("⚠️ OpenAI error:", e)
         final_text, source_type, source_text = fallback_message(target_lang, ai_error=True)
 
     save_log(user_message, user_message, source_type, source_text, final_text)
@@ -591,13 +597,8 @@ def chat():
 # ==============================
 # 7) Urgent Needs
 # ==============================
-
-
 def gmaps_place_link(name: str) -> str:
-    import urllib.parse as up
-
     return f"https://www.google.com/maps/search/?api=1&query={up.quote(name)}"
-
 
 def _fetch_csv(url: str):
     try:
@@ -609,7 +610,6 @@ def _fetch_csv(url: str):
         print("⚠️ CSV:", e)
         return None
 
-
 def _load_json(path: str):
     try:
         if os.path.exists(path):
@@ -619,23 +619,36 @@ def _load_json(path: str):
         print("⚠️ JSON:", e)
     return None
 
-
 def _format_urgent_rows(rows, lang: str = "ar"):
     out = []
     for r in rows or []:
-        hospital = r.get("hospital") or r.get("Hospital") or r.get("المستشفى") or ""
+        hospital = (
+            r.get("hospital")
+            or r.get("Hospital")
+            or r.get("المستشفى")
+            or ""
+        )
         status = r.get("status") or r.get("Status") or r.get("الحالة") or ""
-        details = r.get("details") or r.get("Details") or r.get("التفاصيل") or ""
-        loc = r.get("location_url") or r.get("Location") or r.get("الموقع") or ""
+        details = (
+            r.get("details")
+            or r.get("Details")
+            or r.get("التفاصيل")
+            or ""
+        )
+        loc = (
+            r.get("location_url")
+            or r.get("Location")
+            or r.get("الموقع")
+            or ""
+        )
         if hospital and not loc:
             loc = gmaps_place_link(hospital)
 
         if hospital:
-            # ترجمة الحقول لو اللغة المطلوبة إنجليزية
             if lang == "en":
                 hospital_t = translate_field_for_lang(hospital, "en")
-                status_t = translate_field_for_lang(status or "", "en")
-                details_t = translate_field_for_lang(details or "", "en")
+                status_t   = translate_field_for_lang(status or "", "en")
+                details_t  = translate_field_for_lang(details or "", "en")
             else:
                 hospital_t, status_t, details_t = hospital, status, details
 
@@ -648,7 +661,6 @@ def _format_urgent_rows(rows, lang: str = "ar"):
                 }
             )
     return out
-
 
 FALLBACK_URGENT = [
     {
@@ -670,7 +682,6 @@ FALLBACK_URGENT = [
         "location_url": gmaps_place_link("East Jeddah Hospital Blood Bank"),
     },
 ]
-
 
 @app.route("/api/urgent_needs")
 def urgent_needs():
@@ -698,11 +709,13 @@ def urgent_needs():
 
     base_text_ar = "احتياجات عاجلة (يرجى الاتصال قبل الزيارة)."
     base_text_en = "Urgent needs (please call the hospital before visiting)."
-    answer_en = base_text_en  # ثابت حالياً
+
+    answer_ar = base_text_ar
+    answer_en = base_text_en
 
     return jsonify(
         {
-            "answer_ar": base_text_ar,
+            "answer_ar": answer_ar,
             "answer_en": answer_en,
             "source": "Sheet/JSON/Fallback",
             "needs": needs,
@@ -713,8 +726,6 @@ def urgent_needs():
 # ==============================
 # 8) Eligibility (فحص الأهلية)
 # ==============================
-
-
 ELIGIBILITY_QUESTIONS = [
     {"id": "age", "text": "كم عمرك؟", "type": "number", "min": 1, "max": 100},
     {"id": "weight", "text": "كم وزنك بالكيلو؟", "type": "number", "min": 30, "max": 300},
@@ -761,11 +772,9 @@ ELIGIBILITY_QUESTIONS = [
     },
 ]
 
-
 @app.route("/api/eligibility/questions")
 def eligibility_questions():
     return jsonify({"questions": ELIGIBILITY_QUESTIONS})
-
 
 def evaluate_eligibility(payload: dict):
     reasons = []
@@ -793,7 +802,9 @@ def evaluate_eligibility(payload: dict):
         eligible = False
         days_left = 90 - last
         next_date = (datetime.now() + timedelta(days=days_left)).strftime("%Y-%m-%d")
-        reasons.append(f"لم يمض 90 يومًا منذ آخر تبرع. متاح بعد {days_left} يومًا ({next_date}).")
+        reasons.append(
+            f"لم يمض 90 يومًا منذ آخر تبرع. متاح بعد {days_left} يومًا ({next_date})."
+        )
 
     if on_ac:
         eligible = False
@@ -819,18 +830,21 @@ def evaluate_eligibility(payload: dict):
 
     return eligible, reasons, next_date
 
-
 @app.route("/api/eligibility/evaluate", methods=["POST"])
 def eligibility_evaluate():
     payload = request.json or {}
     ok, reasons, next_date = evaluate_eligibility(payload)
-    return jsonify({"eligible": ok, "reasons": reasons, "next_eligible_date": next_date})
+    return jsonify(
+        {
+            "eligible": ok,
+            "reasons": reasons,
+            "next_eligible_date": next_date,
+        }
+    )
 
 # ==============================
 # 9) Reminder (Email + ICS)
 # ==============================
-
-
 def make_ics_bytes(date_str: str) -> bytes:
     dt = (
         datetime.fromisoformat(date_str)
@@ -843,7 +857,10 @@ def make_ics_bytes(date_str: str) -> bytes:
         return f"{n:02d}"
 
     def fmt(d: datetime) -> str:
-        return f"{d.year}{pad(d.month)}{pad(d.day)}T{pad(d.hour)}{pad(d.minute)}{pad(d.second)}Z"
+        return (
+            f"{d.year}{pad(d.month)}{pad(d.day)}T"
+            f"{pad(d.hour)}{pad(d.minute)}{pad(d.second)}Z"
+        )
 
     ics = f"""BEGIN:VCALENDAR
 VERSION:2.0
@@ -860,8 +877,9 @@ END:VEVENT
 END:VCALENDAR"""
     return ics.encode("utf-8")
 
-
-def try_send_email(to_email: str, subject: str, body: str, ics_bytes: bytes, ics_name: str) -> Tuple[bool, str]:
+def try_send_email(
+    to_email: str, subject: str, body: str, ics_bytes: bytes, ics_name: str
+) -> Tuple[bool, str]:
     if SENDGRID_READY:
         try:
             url = "https://api.sendgrid.com/v3/mail/send"
@@ -874,7 +892,10 @@ def try_send_email(to_email: str, subject: str, body: str, ics_bytes: bytes, ics
 
             payload = {
                 "personalizations": [{"to": [{"email": to_email}]}],
-                "from": {"email": from_email, "name": EMAIL_FROM_NAME},
+                "from": {
+                    "email": from_email,
+                    "name": EMAIL_FROM_NAME,
+                },
                 "subject": subject,
                 "content": [{"type": "text/plain", "value": body}],
             }
@@ -907,7 +928,12 @@ def try_send_email(to_email: str, subject: str, body: str, ics_bytes: bytes, ics
         msg["Subject"] = subject
         msg.set_content(body)
         if ics_bytes:
-            msg.add_attachment(ics_bytes, maintype="text", subtype="calendar", filename=ics_name)
+            msg.add_attachment(
+                ics_bytes,
+                maintype="text",
+                subtype="calendar",
+                filename=ics_name,
+            )
         if SMTP_TLS:
             server = smtplib.SMTP(SMTP_HOST, SMTP_PORT)
             server.starttls()
@@ -920,7 +946,6 @@ def try_send_email(to_email: str, subject: str, body: str, ics_bytes: bytes, ics
         return True, "تم الإرسال عبر SMTP."
     except Exception as e:
         return False, str(e)
-
 
 @app.route("/api/reminder", methods=["POST"])
 def reminder():
@@ -965,8 +990,8 @@ def reminder():
             (
                 f"مرحباً {user_hint},\n\n"
                 f"هذا تذكير من زمرة بموعد تبرعك المقترح بتاريخ {next_date}.\n"
-                "يمكنك أيضًا إضافة الموعد من داخل التطبيق أو من ملف التقويم المرفق.\n\n"
-                "مع التحية،\nفريق زمرة."
+                f"يمكنك أيضًا إضافة الموعد من داخل التطبيق أو من ملف التقويم المرفق.\n\n"
+                f"مع التحية،\nفريق زمرة."
             ),
             ics,
             f"Zomrah-Reminder-{next_date}.ics",
@@ -979,7 +1004,6 @@ def reminder():
 
     return jsonify({"ok": True, "next_date": next_date, "email_status": email_status})
 
-
 @app.route("/api/reminder/ics/<date_str>")
 def reminder_ics(date_str):
     try:
@@ -991,40 +1015,40 @@ def reminder_ics(date_str):
     return Response(
         ics,
         mimetype="text/calendar",
-        headers={"Content-Disposition": f'attachment; filename="Zomrah-Reminder-{date_str}.ics"'},
+        headers={
+            "Content-Disposition": f'attachment; filename="Zomrah-Reminder-{date_str}.ics"'
+        },
     )
 
 # ==============================
 # 10) Upload audio (Mock)
 # ==============================
-
-
 @app.route("/api/upload_audio", methods=["POST"])
 def upload_audio():
     if "audio_file" not in request.files:
         return jsonify({"error": "لم يتم إرسال ملف صوتي"}), 400
 
-    # لتسريع التجربة: نفترض أنه سأل عن شروط التبرع
     text = "ما هي شروط التبرع بالدم؟"
-    corrected = text  # بدون تصحيح عبر OpenAI لسرعة أكبر
+    corrected = text
     answer, src, score = search_knowledge_base(corrected)
 
     if answer:
-        final = summarize_and_simplify(answer, 250)
+        final = summarize_and_simplify(answer, 250, "ar")
         st = "KB (من الصوت)"
+        src_label = "القاعدة المعرفية"
     else:
         final = "تم تحويل الصوت؛ لا إجابة محددة في القاعدة المعرفية."
         st = "Error (من الصوت)"
-        src = None
+        src_label = None
 
-    save_log("ملف صوتي", corrected, st, src, final)
+    save_log("ملف صوتي", corrected, st, src_label, final)
 
     return jsonify(
         {
             "transcribed_text": corrected,
             "answer": final,
             "source_type": st,
-            "source_text": src,
+            "source_text": src_label,
             "corrected_message": corrected,
         }
     )
@@ -1032,8 +1056,6 @@ def upload_audio():
 # ==============================
 # 11) Stats / Campaigns
 # ==============================
-
-
 @app.route("/api/stats")
 def stats():
     try:
@@ -1048,20 +1070,25 @@ def stats():
     except Exception as e:
         return jsonify({"ok": False, "error": str(e)}), 500
 
-
 @app.route("/api/campaigns")
 def campaigns():
     data = _load_json(CAMPAIGNS_JSON_PATH)
     if not data:
-        return jsonify({"ok": False, "campaigns": [], "message": "ملف الحملات غير متوفر"})
+        return jsonify(
+            {
+                "ok": False,
+                "campaigns": [],
+                "message": "ملف الحملات غير متوفر",
+            }
+        )
     return jsonify({"ok": True, "campaigns": data})
 
 # ==============================
 # 12) Run (Local)
 # ==============================
-
 if __name__ == "__main__":
     init_db()
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
