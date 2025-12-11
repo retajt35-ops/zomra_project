@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
@@ -488,19 +488,13 @@
 
   <script>
     // =======================
-    // إعداد اللغة (عربي / English)
+    // لغة الواجهة (عربي / English)
     // =======================
     let CURRENT_LANG = 'ar';
 
     function applyLanguage(){
       document.documentElement.lang = CURRENT_LANG;
       document.documentElement.dir = (CURRENT_LANG === 'ar') ? 'rtl' : 'ltr';
-
-      // تغيير اتجاه الـ layout حسب اللغة (بدون تغيير الألوان)
-      const mainWrapper = document.querySelector('.main-wrapper');
-      if(mainWrapper){
-        mainWrapper.style.flexDirection = (CURRENT_LANG === 'ar') ? 'row-reverse' : 'row';
-      }
 
       const headerTitle = document.getElementById('header-title');
       if(headerTitle){
@@ -717,9 +711,6 @@
       })
       .catch(()=>{ SMTP_READY = false; SENDGRID_READY = false; });
 
-    // مهلة عامة 5 ثوانٍ
-    function delay(ms){ return new Promise(resolve => setTimeout(resolve, ms)); }
-
     function toggleNext(btn){
       var el = btn.nextElementSibling;
       if(!el) return;
@@ -745,6 +736,7 @@
       return loadingDiv;
     }
     function removeLoading(loadingDiv){
+      if(!loadingDiv) loadingDiv = document.getElementById('loading-indicator');
       if(loadingDiv && loadingDiv.parentNode){
         loadingDiv.parentNode.removeChild(loadingDiv);
       }
@@ -766,34 +758,44 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    // عرض رد البوت + زر تفاصيل + بلوك الترجمة + تذييل "مولد آليًا"
-    function displayAnswerWithControls(summarizedText, originalQuestion, meta){
-      meta = meta || {};
-      var cb = document.getElementById('chat-box');
-      var m = document.createElement('div');
+    // =======================
+    // عرض الإجابة + المصدر + الترجمة
+    // =======================
+    function displayAnswerWithControls(data, originalQuestion){
+      const cb = document.getElementById('chat-box');
+      const summarizedText = (data && data.answer ? data.answer.trim() : '');
+      if(!summarizedText) return;
+
+      const m = document.createElement('div');
       m.className = 'message bot-message';
 
-      // نص مقدمة حسب الـ KB (إن توفرت المعلومة من الباك إند)
-      var kbPrefixHTML = '';
-      if(typeof meta.kb_found === 'boolean'){
-        if(meta.kb_found){
-          kbPrefixHTML = (CURRENT_LANG === 'ar')
-            ? 'تم العثور على إجابة في قاعدة المعرفة:<br><br>'
-            : 'An answer was found in the knowledge base:<br><br>';
-        }else{
-          kbPrefixHTML = (CURRENT_LANG === 'ar')
-            ? 'لم نعثر على إجابة في قاعدة المعرفة؛ استعنا بـ OpenAI لصياغة الرد التالي:<br><br>'
-            : 'No answer was found in the knowledge base; OpenAI was used to generate the following response:<br><br>';
+      // ملاحظة المصدر (قاعدة معرفة / OpenAI)
+      if (data && typeof data.from_kb !== 'undefined'){
+        if (data.from_kb === false){
+          const info = document.createElement('div');
+          info.className = 'inline-note';
+          info.innerHTML = (CURRENT_LANG === 'ar')
+            ? 'لم نعثر على إجابة في قاعدة المعرفة؛ استعنا بـ <strong>OpenAI</strong> لصياغة الرد التالي:'
+            : 'We could not find an answer in the knowledge base; we used <strong>OpenAI</strong> to draft the following reply:';
+          m.appendChild(info);
+        } else if (data.from_kb === true){
+          const info = document.createElement('div');
+          info.className = 'inline-note';
+          info.innerHTML = (CURRENT_LANG === 'ar')
+            ? 'المصدر: قاعدة المعرفة الداخلية'
+            : 'Source: internal knowledge base';
+          m.appendChild(info);
         }
       }
 
-      var main = document.createElement('div');
+      // نص الإجابة (المختصر)
+      const main = document.createElement('div');
       main.className = 'ar-text';
-      main.innerHTML = kbPrefixHTML + (summarizedText || '').replace(/\n/g,'<br>');
+      main.innerHTML = summarizedText.replace(/\n/g,'<br>');
       m.appendChild(main);
 
-      // زر "تفاصيل أكثر"
-      var btn = document.createElement('button');
+      // زر تفاصيل أكثر
+      const btn = document.createElement('button');
       btn.className = 'helper-btn';
       btn.textContent = (CURRENT_LANG === 'ar' ? 'تفاصيل أكثر' : 'More details');
       btn.dataset.state = 'collapsed';
@@ -801,31 +803,55 @@
       btn.dataset.question = originalQuestion || '';
       m.appendChild(btn);
 
-      // تذييل موحّد أسفل كل رد
-      var footer = document.createElement('div');
-      footer.className = 'inline-note';
-      footer.style.marginTop = '10px';
-      footer.innerHTML = (CURRENT_LANG === 'ar')
-        ? 'مُولَّد آليًا • قد يحتوي على أخطاء طفيفة<br>مع تحيات فريق زمرة 🩸'
-        : 'AI-generated • May contain minor errors<br>Best regards, Zomrah Team 🩸';
-      m.appendChild(footer);
+      // زر الترجمة إن توفرت ترجمة من الباك إند
+      let altText = '';
+      if (CURRENT_LANG === 'ar'){
+        altText = data.answer_en || data.translation_en || '';
+      } else {
+        altText = data.answer_ar || data.translation_ar || '';
+      }
 
-      // بلوك الترجمة (بدون عبارة placeholder)
-      var tr = document.createElement('div');
-      tr.className = 'translation-block';
-      var toggleLabel = (CURRENT_LANG === 'ar')
-        ? 'Show English translation'
-        : 'إظهار الترجمة بالعربية';
+      if (altText){
+        const tr = document.createElement('div');
+        tr.className = 'translation-block';
 
-      // نضبط اتجاه الترجمة عكس لغة الواجهة
-      var translationDir = (CURRENT_LANG === 'ar') ? 'ltr' : 'rtl';
-      var translationAlign = (CURRENT_LANG === 'ar') ? 'left' : 'right';
+        const toggleLabel = (CURRENT_LANG === 'ar')
+          ? 'إظهار الترجمة الإنجليزية'
+          : 'Show Arabic translation';
 
-      tr.innerHTML =
-        '<button class="toggle-btn" onclick="toggleNext(this)">'+toggleLabel+'</button>'+
-        '<div class="ar-translation" style="display:none;margin-top:6px;direction:'+translationDir+';text-align:'+translationAlign+';"></div>';
-      m.appendChild(tr);
+        const tBtn = document.createElement('button');
+        tBtn.className = 'toggle-btn';
+        tBtn.textContent = toggleLabel;
+        tBtn.onclick = function(){ toggleNext(this); };
 
+        const tDiv = document.createElement('div');
+        tDiv.className = 'ar-translation';
+        tDiv.style.display = 'none';
+        if (CURRENT_LANG === 'ar'){
+          tDiv.style.direction = 'ltr';
+          tDiv.style.textAlign = 'left';
+        } else {
+          tDiv.style.direction = 'rtl';
+          tDiv.style.textAlign = 'right';
+        }
+        tDiv.innerHTML = altText.replace(/\n/g,'<br>');
+
+        tr.appendChild(tBtn);
+        tr.appendChild(tDiv);
+        m.appendChild(tr);
+      }
+
+      // تذييل خاص لو الرد من OpenAI
+      if (data && data.from_kb === false){
+        const footer = document.createElement('div');
+        footer.className = 'inline-note';
+        footer.innerHTML = (CURRENT_LANG === 'ar')
+          ? 'مُولَّد آليًا • قد يحتوي على أخطاء طفيفة<br>مع تحياتي فريق زمرة'
+          : 'AI-generated • May contain minor errors<br>Kind regards, Zomrah team';
+        m.appendChild(footer);
+      }
+
+      // حدث زر التفاصيل
       btn.addEventListener('click', async function(){
         if (this.dataset.state === 'collapsed') {
           if (!this.dataset.detailed) {
@@ -837,7 +863,7 @@
               });
               if(!res.ok) throw new Error('HTTP '+res.status);
               const j = await res.json();
-              this.dataset.detailed = j.answer || this.dataset.summarized;
+              this.dataset.detailed = (j.answer || this.dataset.summarized || '');
             }catch(e){
               displayError(CURRENT_LANG === 'ar'
                 ? '❌ فشل جلب التفاصيل.'
@@ -845,11 +871,11 @@
               return;
             }
           }
-          main.innerHTML = kbPrefixHTML + (this.dataset.detailed || '').replace(/\n/g,'<br>');
+          main.innerHTML = (this.dataset.detailed || '').replace(/\n/g,'<br>');
           this.textContent = (CURRENT_LANG === 'ar' ? 'إظهار أقل' : 'Show less');
           this.dataset.state = 'expanded';
         } else {
-          main.innerHTML = kbPrefixHTML + (this.dataset.summarized || '').replace(/\n/g,'<br>');
+          main.innerHTML = (this.dataset.summarized || '').replace(/\n/g,'<br>');
           this.textContent = (CURRENT_LANG === 'ar' ? 'تفاصيل أكثر' : 'More details');
           this.dataset.state = 'collapsed';
         }
@@ -1148,7 +1174,6 @@
       if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('send-btn').click(); }
     });
 
-    // زر الإرسال (نصي) + مهلة 5 ثوانٍ قبل الرد
     document.getElementById('send-btn').addEventListener('click', async function(){
       var inputField = document.getElementById('user-input');
       var rawMessage = (inputField.value||'').trim();
@@ -1157,10 +1182,8 @@
       lastUserRaw = rawMessage;
 
       var loadingDiv = null, data = null;
-      setInteractionState(false);
-      loadingDiv = showLoading();
-
       try{
+        setInteractionState(false); loadingDiv = showLoading();
         var res = await fetch('/api/chat',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
@@ -1169,23 +1192,18 @@
         if(!res.ok) throw new Error('خطأ في الخادم: '+res.status+' '+res.statusText);
         data = await res.json();
       }catch(err){
-        removeLoading(loadingDiv);
-        setInteractionState(true);
         displayError(
           (CURRENT_LANG === 'ar')
             ? ('❌ فشل الاتصال: ' + err.message + '. تأكد من أن خادم Flask يعمل.')
             : ('❌ Connection failed: ' + err.message + '. Check that the Flask server is running.')
         );
-        return;
+        removeLoading(loadingDiv); setInteractionState(true); return;
+      }finally{
+        removeLoading(loadingDiv); setInteractionState(true);
       }
 
       if (data) {
         var answerText = (data.answer || '').trim();
-
-        // مهلة 5 ثوانٍ قبل إظهار الرد
-        await delay(5000);
-        removeLoading(loadingDiv);
-        setInteractionState(true);
 
         if (!answerText || answerText.length < 10) {
           var fallbackMsg = (CURRENT_LANG === 'ar')
@@ -1212,21 +1230,13 @@
         }
 
         displayMessage(finalUserMessage, 'user');
-
-        // تمرير حالة الـ KB إن كانت موجودة من الباك-إند
-        const meta = {
-          kb_found: (typeof data.kb_found === 'boolean') ? data.kb_found : null,
-          answer_en: data.answer_en || null
-        };
-        displayAnswerWithControls(answerText, finalUserMessage, meta);
+        displayAnswerWithControls(data, finalUserMessage);
 
         if (isLocationIntent(rawMessage)) {
           openNearestAuto();
         }
-      } else {
-        removeLoading(loadingDiv);
-        setInteractionState(true);
       }
+
     });
 
     function pill(id, group, value, label){
@@ -1654,7 +1664,6 @@
     let audioChunks = [];
     let isRecording = false;
 
-    // إرسال تسجيل المايك إلى الباك إند + مهلة 5 ثوانٍ
     async function sendAudioBlob(blob, filename) {
       const loading = showLoading();
       try {
@@ -1666,21 +1675,13 @@
         });
         if (!res.ok) throw new Error('HTTP '+res.status);
         const j = await res.json();
-
-        // مهلة 5 ثوانٍ قبل الرد
-        await delay(5000);
         removeLoading(loading);
 
         displayMessage(
           (CURRENT_LANG === 'ar' ? '🎙️ (رسالة صوتية)' : '🎙️ (voice message)'),
           'user'
         );
-
-        const meta = {
-          kb_found: (typeof j.kb_found === 'boolean') ? j.kb_found : null,
-          answer_en: j.answer_en || null
-        };
-        displayAnswerWithControls(j.answer || '', j.corrected_message || j.transcribed_text || '', meta);
+        displayAnswerWithControls(j, j.corrected_message || j.transcribed_text || '');
       } catch(e) {
         removeLoading(loading);
         displayError(
@@ -1727,7 +1728,6 @@
       }
     });
 
-    // رفع ملف صوتي جاهز + مهلة 5 ثوانٍ
     audioInput.addEventListener('change', async function(){
       if (!this.files || !this.files.length) return;
       const file = this.files[0];
@@ -1742,8 +1742,6 @@
         });
         if(!res.ok) throw new Error('HTTP '+res.status);
         const j = await res.json();
-
-        await delay(5000);
         removeLoading(loading);
 
         displayMessage(
@@ -1753,12 +1751,7 @@
           ),
           'user'
         );
-
-        const meta = {
-          kb_found: (typeof j.kb_found === 'boolean') ? j.kb_found : null,
-          answer_en: j.answer_en || null
-        };
-        displayAnswerWithControls(j.answer || '', j.corrected_message || j.transcribed_text || '', meta);
+        displayAnswerWithControls(j, j.corrected_message || j.transcribed_text || '');
       } catch(e) {
         removeLoading(loading);
         displayError(
