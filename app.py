@@ -239,6 +239,11 @@ def search_knowledge_base(corrected_query) -> Tuple[str, str]:
 
 
 # ========== 6) Chat Pipeline ==========
+# ========== Home Route (الصفحة الرئيسية) ==========
+@app.route("/")
+def home():
+    return render_template("index.html")
+
 def run_chat_pipeline(user_message: str, want_detail: bool = False):
     """
     يقوم بمعالجة السؤال وإرجاع:
@@ -940,4 +945,3 @@ def campaigns():
 if __name__ == "__main__":
     init_db()
     app.run(host="0.0.0.0", port=5000, debug=True)
-
