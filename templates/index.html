@@ -775,7 +775,7 @@
           const info = document.createElement('div');
           info.className = 'inline-note';
           info.innerHTML = (CURRENT_LANG === 'ar')
-            ? 'لم نعثر على إجابة في قاعدة المعرفة؛ استعنا بـ <strong>OpenAI</strong> لصياغة الرد التالي:'
+            ? 'لم نعثر على إجابة في القاعدة المعرفية؛ استعنا بـ <strong>OpenAI</strong> لصياغة الرد التالي:'
             : 'We could not find an answer in the knowledge base; we used <strong>OpenAI</strong> to draft the following reply:';
           m.appendChild(info);
         } else if (data.from_kb === true){
@@ -1174,20 +1174,47 @@
       if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); document.getElementById('send-btn').click(); }
     });
 
+    // =======================
+    // إرسال الرسالة مع التصحيح التلقائي قبل ظهورها
+    // =======================
     document.getElementById('send-btn').addEventListener('click', async function(){
       var inputField = document.getElementById('user-input');
       var rawMessage = (inputField.value||'').trim();
       if(!rawMessage) return;
+
+      // نفرغ الحقل مباشرة
       inputField.value = '';
       lastUserRaw = rawMessage;
 
+      // 1) نصحّح الرسالة تلقائياً (عربي أو إنجليزي)
+      var correctedMessage = rawMessage;
+      try{
+        const fixRes = await fetch('/api/autocorrect', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: rawMessage })
+        });
+        if(fixRes.ok){
+          const fixData = await fixRes.json();
+          if (fixData && typeof fixData.corrected === 'string' && fixData.corrected.trim()){
+            correctedMessage = fixData.corrected.trim();
+          }
+        }
+      }catch(e){
+        console.warn('autocorrect failed:', e);
+        // في حال فشل التصحيح نكمل بالرسالة الأصلية
+      }
+
       var loadingDiv = null, data = null;
       try{
-        setInteractionState(false); loadingDiv = showLoading();
+        setInteractionState(false);
+        loadingDiv = showLoading();
+
+        // 2) نرسل للباك-إند الرسالة المصحّحة فقط
         var res = await fetch('/api/chat',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body: JSON.stringify({message:rawMessage, lang: CURRENT_LANG})
+          body: JSON.stringify({message: correctedMessage, lang: CURRENT_LANG})
         });
         if(!res.ok) throw new Error('خطأ في الخادم: '+res.status+' '+res.statusText);
         data = await res.json();
@@ -1197,9 +1224,12 @@
             ? ('❌ فشل الاتصال: ' + err.message + '. تأكد من أن خادم Flask يعمل.')
             : ('❌ Connection failed: ' + err.message + '. Check that the Flask server is running.')
         );
-        removeLoading(loadingDiv); setInteractionState(true); return;
+        removeLoading(loadingDiv);
+        setInteractionState(true);
+        return;
       }finally{
-        removeLoading(loadingDiv); setInteractionState(true);
+        removeLoading(loadingDiv);
+        setInteractionState(true);
       }
 
       if (data) {
@@ -1210,25 +1240,20 @@
             ? 'لم أستطع فهم سؤالك بشكل كامل. حاول أن تكتب سؤالك عن التبرع بالدم بشكل أبسط أو أكثر تحديدًا.'
             : 'I couldn’t fully understand your question. Please try asking about blood donation in a simpler or more specific way.';
 
-          var finalUserMessageNF = rawMessage;
-          if (CURRENT_LANG === 'ar' && data.corrected_message) {
-            finalUserMessageNF = data.corrected_message;
-          }
-
+          // نعرض للمستخدم الرسالة المصحّحة (وليس الخام)
+          var finalUserMessageNF = correctedMessage;
           displayMessage(finalUserMessageNF, 'user');
           displayMessage(fallbackMsg, 'bot');
 
+          // نستخدم النيّة من النص الأصلي (قبل التصحيح) للخرائط مثلاً
           if (isLocationIntent(rawMessage)) {
             openNearestAuto();
           }
           return;
         }
 
-        var finalUserMessage = rawMessage;
-        if (CURRENT_LANG === 'ar' && data.corrected_message) {
-          finalUserMessage = data.corrected_message;
-        }
-
+        // في الحالة الطبيعية: نعرض الرسالة المصحّحة فقط في واجهة الدردشة
+        var finalUserMessage = correctedMessage;
         displayMessage(finalUserMessage, 'user');
         displayAnswerWithControls(data, finalUserMessage);
 
@@ -1236,7 +1261,6 @@
           openNearestAuto();
         }
       }
-
     });
 
     function pill(id, group, value, label){
