@@ -184,6 +184,54 @@ def openai_correct(text: str) -> str:
         return text
 
 
+# ==============================
+# Spell Correction (Arabic + English) - NEW
+# ==============================
+
+def spell_correct_ar_en(text: str) -> str:
+    """
+    تصحيح تلقائي يدعم العربية والإنجليزية:
+    - يكتشف اللغة تلقائياً
+    - يصحح الإملاء والنحو فقط
+    - يعيد النص المصحح فقط بدون شرح
+    """
+    if not client or not text:
+        return text
+
+    try:
+        try:
+            lang = detect(text)
+        except LangDetectException:
+            lang = "ar"
+
+        if lang == "ar":
+            prompt = (
+                "صحّح النص العربي لغويًا وإملائيًا دون إعادة صياغة أو تغيير المعنى. "
+                "أعد النص المصحح فقط بدون شرح:\n\n"
+                f"{text}"
+            )
+        else:
+            prompt = (
+                "Correct spelling and grammar of the following English text without changing meaning. "
+                "Return the corrected text only:\n\n"
+                f"{text}"
+            )
+
+        resp = client.chat.completions.create(
+            model=OPENAI_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=80,
+            temperature=0.0,
+        )
+
+        out = (resp.choices[0].message.content or "").strip()
+        return out
+
+    except Exception as e:
+        print("⚠️ spell_correct_ar_en:", e)
+        return text
+
+
 # فوتر عربي / إنجليزي
 FOOTER_AR = "مُولَّد آليًا • قد يحتوي على أخطاء طفيفة\nمع تحياتي فريق زمرة 🩸"
 FOOTER_EN = "AI-generated • may contain minor errors\nWith regards, Zomrah Team 🩸"
@@ -639,6 +687,25 @@ def chat():
             "not_understood": not_understood,
         }
     ), 200
+
+# ==============================
+# API: Auto Correct (Arabic + English) - NEW
+# ==============================
+
+@app.route("/api/autocorrect", methods=["POST"])
+def autocorrect():
+    """
+    يستقبل نص المستخدم ويعيد نسخة مصحّحة.
+    يُستخدم من الواجهة قبل عرض الرسالة في مربع المحادثة.
+    """
+    data = request.json or {}
+    text = (data.get("text") or "").strip()
+
+    if not text:
+        return jsonify({"corrected": ""})
+
+    corrected = spell_correct_ar_en(text)
+    return jsonify({"corrected": corrected})
 
 # ==============================
 # 7) Urgent Needs
@@ -1158,6 +1225,7 @@ def campaigns():
 if __name__ == "__main__":
     init_db()
     app.run(host="0.0.0.0", port=5000, debug=True)
+
 
 
 
